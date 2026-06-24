@@ -73,8 +73,8 @@ public sealed class QuestionablePlugin : IDalamudPlugin
         bool RepoCheck()
         {
             string sourceRepository = pluginInterface.SourceRepository;
-            return sourceRepository == "https://gp.xuolu.com/love.json" ||
-                   sourceRepository.Contains("decorwdyun/DalamudPlugins", StringComparison.OrdinalIgnoreCase);
+            return sourceRepository == "https://gh.risona.top/pluginmaster.json" ||
+                   sourceRepository.Contains("Ookura-Risona/DalamudPlugins", StringComparison.OrdinalIgnoreCase);
         }
 
         if (pluginInterface.IsDev || !RepoCheck())

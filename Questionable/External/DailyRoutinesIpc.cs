@@ -155,8 +155,8 @@ internal sealed class DailyRoutinesIpc: IDisposable
             EAetheryteLocation.FirmamentFeatherfall => GetPlaceName(3525),
             EAetheryteLocation.FirmamentHoarfrostHall => GetPlaceName(3528),
             EAetheryteLocation.FirmamentWesternRisensongQuarter => GetPlaceName(3646),
-            EAetheryteLocation.FIrmamentEasternRisensongQuarter => GetPlaceName(3645),
-            _ => aetheryteLocation.ToFriendlyString(),
+            EAetheryteLocation.FirmamentEasternRisensongQuarter => GetPlaceName(3645),
+            _ => GetAetheryteName(aetheryteLocation),
         };
         
         if (string.IsNullOrEmpty(name))
@@ -179,6 +179,21 @@ internal sealed class DailyRoutinesIpc: IDisposable
     }
 
     private string GetPlaceName(uint rowId) => _dataManager.GetExcelSheet<PlaceName>().GetRow(rowId).Name.ToString();
+
+    private string GetAetheryteName(EAetheryteLocation aetheryteLocation)
+    {
+        try
+        {
+            Aetheryte row = _dataManager.GetExcelSheet<Aetheryte>().GetRow((uint)aetheryteLocation);
+            string name = row.PlaceName.Value.Name.ToString();
+            return string.IsNullOrWhiteSpace(name) ? aetheryteLocation.ToString() : name;
+        }
+        catch
+        {
+            return aetheryteLocation.ToString();
+        }
+    }
+
     public void Dispose()
     {
         _frameworkManager.Update -= OnUpdate;
