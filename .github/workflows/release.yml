@@ -1,8 +1,10 @@
 name: Publish
+
 on:
   push:
     tags:
       - '*-cn'
+
 jobs:
   Build:
     permissions:
@@ -16,6 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Get Environment Variables
+        shell: pwsh
         run: |
           $tag = "${{ github.ref }}" -replace 'refs/tags/', ''
           $version = $tag -replace '-cn$', ''
@@ -31,6 +34,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Download Dalamud Latest
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri https://raw.githubusercontent.com/ottercorp/dalamud-distrib/main/stg/latest.zip -OutFile latest.zip
           Expand-Archive -Force latest.zip -DestinationPath "$env:AppData\XIVLauncher\addon\Hooks\dev"
@@ -54,16 +58,14 @@ jobs:
             $commits = git log -n 10 --pretty=format:"- %h %an: %s"
           }
 
-          $auto = @(
+          $body = @(
             "## 自动构建说明",
-            "- 此版本由 GitHub Actions 自动构建发布。"
-          )
+            "- 此版本由 GitHub Actions 自动构建发布。",
+            "",
+            "## 变更日志"
+          ) + $commits
 
-          $changes = @("## 变更日志") + $commits
-
-          $body = $auto + "" + $changes
           $body -join "`n" | Out-File -FilePath release_notes.md -Encoding UTF8
-
           "release_body_path=$(Resolve-Path release_notes.md)" | Out-File -Append -FilePath $Env:GITHUB_ENV
           Write-Host "Previous tag: $prev"
           Write-Host "Release notes written to $(Resolve-Path release_notes.md)"

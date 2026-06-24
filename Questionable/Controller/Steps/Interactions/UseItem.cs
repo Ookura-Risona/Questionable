@@ -25,7 +25,6 @@ internal static class UseItem
     internal sealed class Factory
     (
         IClientState clientState,
-        TerritoryData territoryData,
         ILogger<Factory> logger)
         : ITaskFactory
     {
@@ -38,8 +37,8 @@ internal static class UseItem
             }
             else if (step.InteractionType != EInteractionType.UseItem)
                 return [];
-
-            ArgumentNullException.ThrowIfNull(step.ItemId);
+            if (!step.ItemId.HasValue)
+                throw new ArgumentNullException(nameof(step.ItemId));
 
             if (step.ItemId == QuestStep.VesperBayAetheryteTicket)
             {
@@ -59,7 +58,7 @@ internal static class UseItem
                 [
                     task,
                     new WaitCondition.Task(() => clientState.TerritoryType == 140,
-                        $"Wait(territory: {territoryData.GetNameAndId(140)})"),
+                        $"Wait(territory: {TerritoryData.GetNameAndId(140)})"),
                     new Mount.MountTask(140,
                         nextPosition != null ? Mount.EMountIf.AwayFromPosition : Mount.EMountIf.Always,
                         nextPosition),
@@ -80,7 +79,9 @@ internal static class UseItem
                 }
                 else
                 {
-                    ArgumentNullException.ThrowIfNull(step.Position);
+                    if (!step.Position.HasValue)
+                        throw new ArgumentNullException(nameof(step.Position));
+
                     task = new UseOnPosition(quest.Id, step.Position.Value, step.ItemId.Value,
                         step.CompletionQuestVariablesFlags);
                 }
@@ -126,7 +127,6 @@ internal static class UseItem
 
     internal abstract class UseItemExecutorBase<T>
     (
-        QuestFunctions questFunctions,
         ICondition condition,
         ILogger logger) : TaskExecutor<T>
     where T : class, IUseItemBase
@@ -161,7 +161,7 @@ internal static class UseItem
         {
             if (QuestId is QuestId realQuestId && QuestWorkUtils.HasCompletionFlags(CompletionQuestVariablesFlags))
             {
-                QuestProgressInfo? questWork = questFunctions.GetQuestProgressInfo(realQuestId);
+                QuestProgressInfo? questWork = QuestFunctions.GetQuestProgressInfo(realQuestId);
                 if (questWork != null &&
                     QuestWorkUtils.MatchesQuestWork(CompletionQuestVariablesFlags, questWork))
                     return ETaskResult.TaskComplete;
@@ -228,10 +228,9 @@ internal static class UseItem
     internal sealed class UseOnGroundExecutor
     (
         GameFunctions gameFunctions,
-        QuestFunctions questFunctions,
         ICondition condition,
         ILogger<UseOnGroundExecutor> logger)
-        : UseItemExecutorBase<UseOnGround>(questFunctions, condition, logger)
+        : UseItemExecutorBase<UseOnGround>(condition, logger)
     {
         protected override bool UseItem() => gameFunctions.UseItemOnGround(Task.DataId, ItemId);
     }
@@ -250,10 +249,9 @@ internal static class UseItem
     internal sealed class UseOnPositionExecutor
     (
         GameFunctions gameFunctions,
-        QuestFunctions questFunctions,
         ICondition condition,
         ILogger<UseOnPosition> logger)
-        : UseItemExecutorBase<UseOnPosition>(questFunctions, condition, logger)
+        : UseItemExecutorBase<UseOnPosition>(condition, logger)
     {
         protected override bool UseItem() => gameFunctions.UseItemOnPosition(Task.Position, ItemId);
     }
@@ -271,11 +269,10 @@ internal static class UseItem
 
     internal sealed class UseOnObjectExecutor
     (
-        QuestFunctions questFunctions,
         GameFunctions gameFunctions,
         ICondition condition,
         ILogger<UseOnObject> logger)
-        : UseItemExecutorBase<UseOnObject>(questFunctions, condition, logger)
+        : UseItemExecutorBase<UseOnObject>(condition, logger)
     {
         protected override bool UseItem() => gameFunctions.UseItem(Task.DataId, ItemId);
     }
@@ -293,10 +290,9 @@ internal static class UseItem
     internal sealed class UseOnSelfExecutor
     (
         GameFunctions gameFunctions,
-        QuestFunctions questFunctions,
         ICondition condition,
         ILogger<UseOnSelf> logger)
-        : UseItemExecutorBase<UseOnSelf>(questFunctions, condition, logger)
+        : UseItemExecutorBase<UseOnSelf>(condition, logger)
     {
         protected override bool UseItem() => gameFunctions.UseItem(ItemId);
     }

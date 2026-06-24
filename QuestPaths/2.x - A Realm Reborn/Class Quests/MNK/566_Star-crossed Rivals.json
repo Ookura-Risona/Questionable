@@ -1,6 +1,7 @@
-{
+﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "plogon_enjoyer",
+  "LastChecked": {"Username": "alydev", "Date": "2026-06-20"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -68,7 +69,14 @@
           "TerritoryId": 146,
           "InteractionType": "UseItem",
           "ItemId": 2000409,
-          "CompletionQuestVariablesFlags": [null,null,null,null,null,16]
+          "CompletionQuestVariablesFlags": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            16
+          ]
         },
         {
           "Position": {
@@ -100,7 +108,14 @@
           "TerritoryId": 146,
           "InteractionType": "UseItem",
           "ItemId": 2000409,
-          "CompletionQuestVariablesFlags": [null,null,null,null,null,64]
+          "CompletionQuestVariablesFlags": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            64
+          ]
         },
         {
           "DataId": 2001524,
@@ -112,7 +127,14 @@
           "TerritoryId": 146,
           "InteractionType": "UseItem",
           "ItemId": 2000409,
-          "CompletionQuestVariablesFlags": [null,null,null,null,null,32],
+          "CompletionQuestVariablesFlags": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            32
+          ],
           "Fly": true
         },
         {
@@ -126,7 +148,14 @@
           "InteractionType": "UseItem",
           "ItemId": 2000409,
           "Fly": true,
-          "CompletionQuestVariablesFlags": [null,null,null,null,null,128]
+          "CompletionQuestVariablesFlags": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            128
+          ]
         }
       ]
     },
@@ -143,7 +172,10 @@
           "TerritoryId": 146,
           "InteractionType": "SinglePlayerDuty",
           "AetheryteShortcut": "Southern Thanalan - Little Ala Mhigo",
-          "Fly": true
+          "Fly": true,
+          "SinglePlayerDutyOptions": {
+            "Enabled": true
+          }
         }
       ]
     },

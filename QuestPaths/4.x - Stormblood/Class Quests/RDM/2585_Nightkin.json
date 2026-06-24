@@ -86,7 +86,7 @@
           },
           "TerritoryId": 399,
           "InteractionType": "SinglePlayerDuty",
-          "Comment": "TODO Navigation doesn't work if flying is locked",
+          "SinglePlayerDutyOptions": {"Enabled": false},
           "AethernetShortcut": [
             "[Idyllshire] Aetheryte Plaza",
             "[Idyllshire] Prologue Gate (Western Hinterlands)"

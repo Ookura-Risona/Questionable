@@ -15,6 +15,8 @@ using Dalamud.Utility;
 using ECommons.ImGuiMethods;
 using Questionable.Controller;
 using Questionable.External;
+using Questionable.Utils;
+using static Questionable.Utils.LocalizeShortcut;
 namespace Questionable.Windows.ConfigComponents;
 
 internal sealed class PluginConfigComponent
@@ -31,25 +33,30 @@ internal sealed class PluginConfigComponent
     [
         new("vnavmesh",
             "vnavmesh",
-            """
-            vnavmesh 处理寻路、导航，负责将你的角色移动到下一个与任务相关的目的地。
-            """,
+            _L("""
+            vnavmesh handles the navigation within a zone, moving
+            your character to the next quest-related objective.
+            """),
             new("https://github.com/awgil/ffxiv_navmesh/"),
-            new("https://puni.sh/api/repository/veyn")),
+            new("https://puni.sh/api/repository/veyn"),
+            "/vnav"),
         new("Lifestream",
             "Lifestream",
-            """
-            用于在城市小型以太之光间传送。
-            """,
+            _L("""
+            Used to travel to aethernet shards in cities.
+            """),
             new("https://github.com/NightmareXIV/Lifestream"),
-            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json")),
+            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json"),
+            "/lifestream"),
         new("TextAdvance",
             "TextAdvance",
-            """
-            自动接受并交付任务，跳过过场动画和对话。
-            """,
+            _L("""
+            Automatically accepts and turns in quests, skips cutscenes
+            and dialogue.
+            """),
             new("https://github.com/NightmareXIV/TextAdvance"),
-            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json"))
+            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json"),
+            "/at c")
     ];
 
     private static readonly ReadOnlyDictionary<Configuration.ECombatModule, PluginInfo> CombatPlugins =
@@ -61,7 +68,8 @@ internal sealed class PluginConfigComponent
                     "BossMod",
                     string.Empty,
                     new("https://github.com/awgil/ffxiv_bossmod"),
-                    new("https://puni.sh/api/repository/veyn"))
+                    new("https://puni.sh/api/repository/veyn"),
+                    "/vbm")
             },
             {
                 Configuration.ECombatModule.WrathCombo,
@@ -69,7 +77,8 @@ internal sealed class PluginConfigComponent
                     "WrathCombo",
                     string.Empty,
                     new("https://github.com/PunishXIV/WrathCombo"),
-                    new("https://puni.sh/api/plugins"))
+                    new("https://puni.sh/api/plugins"),
+                    "/wrath")
             },
             {
                 Configuration.ECombatModule.RotationSolverReborn,
@@ -78,15 +87,17 @@ internal sealed class PluginConfigComponent
                     string.Empty,
                     new("https://github.com/FFXIV-CombatReborn/RotationSolverReborn"),
                     new(
-                        "https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json"))
+                        "https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json"),
+                    "/rsr")
             },
             {
                 Configuration.ECombatModule.AEAssist,
                 new("AEAssist",
                     "AEAssistV3",
-                    "如果你希望使用 AEAssist，请自行寻找安装方式",
+                    _L("If you want to use AEAssist, install it from its own source."),
                     new("https://github.com/FFXIV-CombatReborn/AEAssist"),
-                    null)
+                    null,
+                    "/ae")
             }
         }.AsReadOnly();
     private readonly CombatController _combatController = combatController;
@@ -99,46 +110,70 @@ internal sealed class PluginConfigComponent
     [
         new("CBT (formerly known as Automaton)",
             "Automaton",
-            """
-            Automaton 是一组自动化相关的功能合集。
-            """,
+            _L("""
+            Automaton is a collection of automation-related tweaks.
+            """),
             new("https://github.com/Jaksuhn/Automaton"),
             new("https://puni.sh/api/repository/croizat"),
             "/cbt",
             [
-                new("已启用 'Sniper no sniping'",
-                    "自动完成红莲版本加入的狙击小游戏任务",
+                new(_L("'Sniper no sniping' enabled"),
+                    _L("Automatically completes sniping tasks introduced in Stormblood"),
                     () => automatonIpc.IsAutoSnipeEnabled)
             ]),
         new("Pandora's Box",
             "PandorasBox",
-            """
-            Pandora's Box 是一组便捷功能合集。
-            """,
+            _L("""
+            Pandora's Box is a collection of tweaks.
+            """),
             new("https://github.com/PunishXIV/PandorasBox"),
             new("https://puni.sh/api/plugins"),
             "/pandora",
             [
-                new("已启用 'Auto Active Time Maneuver'",
-                    """
-                    自动完成单人任务、副本和大型任务中的 Active Time Maneuver。
-                    """,
+                new(_L("'Auto Active Time Maneuver' enabled"),
+                    _L("""
+                    Automatically completes active time maneuvers in
+                    single player instances, trials and raids
+                    """),
                     () => pandorasBoxIpc.IsAutoActiveTimeManeuverEnabled)
             ]),
         new("Artisan",
             "Artisan",
-            """
-            全自动生产插件（自动制作）。
-            """,
+            _L("""
+            Automates crafting
+            """),
             new("https://github.com/PunishXIV/Artisan"),
             new("https://puni.sh/api/plugins"),
-            "/artisan")
+            "/artisan"),
+        new("NotificationMaster",
+            "NotificationMaster",
+            _L("""
+            Sends a configurable out-of-game notification if a quest
+            requires manual actions.
+            """),
+            new Uri("https://github.com/NightmareXIV/NotificationMaster"),
+            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json"),
+            "/pnotify"),
+        new("AutoDuty",
+            "AutoDuty",
+            _L("Automates duties"),
+            new("https://github.com/erdelf/AutoDuty"),
+            new("https://puni.sh/api/repository/erdelf"),
+            "/ad"),
+        new("Stylist",
+            "Stylist",
+            _L("""
+            Gear manager
+            """),
+            new("https://github.com/NightmareXIV/Stylist"),
+            new("https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json"),
+            "/stylist c")
     ];
     private readonly UiUtils _uiUtils = uiUtils;
 
     public override void DrawTab()
     {
-        using ImRaii.TabItemDisposable tab = ImRaii.TabItem("插件依赖###Plugins");
+        using ImRaii.TabItemDisposable tab = ImRaii.TabItem(_L("Dependencies") + "###Plugins");
         if (!tab)
             return;
 
@@ -149,11 +184,11 @@ internal sealed class PluginConfigComponent
         ImGui.Spacing();
 
         if (allRequiredInstalled)
-            ImGui.TextColored(ImGuiColors.ParsedGreen, "所有需要的插件都已安装。");
+            ImGui.TextColored(ImGuiColors.ParsedGreen, _L("All required plugins are installed."));
         else
         {
             ImGui.TextColored(ImGuiColors.DalamudRed,
-                "缺少必需的插件，Questionable 可能无法正常工作。");
+                _L("Required plugins are missing, Questionable will not work properly."));
         }
     }
 
@@ -166,53 +201,66 @@ internal sealed class PluginConfigComponent
                                ImGui.GetStyle().ItemSpacing.X;
         }
 
-        ImGui.Text("Questionable 必须安装以下插件才能正常工作：");
         allRequiredInstalled = true;
-        using (ImRaii.PushIndent())
-        {
-            foreach (PluginInfo plugin in RequiredPlugins)
-                allRequiredInstalled &= DrawPlugin(plugin, checklistPadding);
-        }
-
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        ImGui.Text("Questionable 支持多个自动输出/循环插件，请选择你想要使用的：");
-
-        using (ImRaii.Disabled(_combatController.IsRunning))
+        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+        if (ImGui.CollapsingHeader(_L("Required plugins:")))
         {
             using (ImRaii.PushIndent())
             {
-                if (ImGui.RadioButton("不使用自动输出/循环插件（战斗必须手动进行）",
-                    _configuration.General.CombatModule == Configuration.ECombatModule.None))
+                foreach (PluginInfo plugin in RequiredPlugins)
+                    allRequiredInstalled &= DrawPlugin(plugin, checklistPadding);
+            }
+        }
+
+        if (ImGui.CollapsingHeader(_L("Rotation/Automation plugins: (Recommended: BossMod (VBM) )")))
+        {
+            using (ImRaii.Disabled(_combatController.IsRunning))
+            {
+                using (ImRaii.PushIndent())
                 {
-                    _configuration.General.CombatModule = Configuration.ECombatModule.None;
-                    _pluginInterface.SavePluginConfig(_configuration);
+                    if (ImGui.RadioButton(_L("No rotation/combat plugin (combat must be done manually)"),
+                        _configuration.General.CombatModule == Configuration.ECombatModule.None))
+                    {
+                        _configuration.General.CombatModule = Configuration.ECombatModule.None;
+                        _pluginInterface.SavePluginConfig(_configuration);
+                    }
+
+                    allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.BossMod, checklistPadding);
+                    allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.WrathCombo, checklistPadding);
                 }
 
-                allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.BossMod, checklistPadding);
-                allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.WrathCombo, checklistPadding);
-            }
-
-            ImGui.Text("以下自动输出/循环插件仅用于兼容性和测试：");
-            using (ImRaii.PushIndent())
-            {
-                allRequiredInstalled &=
-                    DrawCombatPlugin(Configuration.ECombatModule.RotationSolverReborn, checklistPadding);
-                allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.AEAssist, checklistPadding);
+                ImGui.Text(_L("The following rotation/combat plugin(s) are provided for compatibility and testing purposes:"));
+                using (ImRaii.PushIndent())
+                {
+                    allRequiredInstalled &=
+                        DrawCombatPlugin(Configuration.ECombatModule.RotationSolverReborn, checklistPadding);
+                    allRequiredInstalled &= DrawCombatPlugin(Configuration.ECombatModule.AEAssist, checklistPadding);
+                }
             }
         }
 
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        ImGui.Text("以下插件不是必需的，但是推荐安装：");
-        using (ImRaii.PushIndent())
+        if (ImGui.CollapsingHeader(_L("Recommended/niche plugins:")))
         {
-            foreach (PluginInfo plugin in _recommendedPlugins)
-                DrawPlugin(plugin, checklistPadding);
+            using (ImRaii.PushIndent())
+            {
+                foreach (PluginInfo plugin in _recommendedPlugins)
+                    DrawPlugin(plugin, checklistPadding);
+            }
+        }
+    }
+
+    private void AddConfigClickable(IExposedPlugin? installedPlugin, PluginInfo plugin)
+    {
+        if (installedPlugin != null && plugin.ConfigCommand != null && plugin.ConfigCommand.StartsWith('/'))
+        {
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip(_L("Open Config"));
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+            if (ImGui.IsItemClicked())
+                _commandManager.ProcessCommand(plugin.ConfigCommand);
+
         }
     }
 
@@ -226,9 +274,21 @@ internal sealed class PluginConfigComponent
             if (installedPlugin != null)
                 label += $" v{installedPlugin.Version}";
 
+            ImGui.BeginGroup();
+            if (installedPlugin != null && installedPlugin.InternalName.Equals("vnavmesh", StringComparison.Ordinal) && (installedPlugin.Manifest.Author.Contains("AtmoOmen")))
+                plugin = new(
+                    plugin.DisplayName,
+                    plugin.InternalName,
+                    plugin.Details,
+                    new("https://github.com/AtmoOmen/ffxiv_navmesh-cn"),
+                    new("https://gh.atmoomen.top/DalamudPlugins/main/pluginmaster.json"),
+                    plugin.ConfigCommand
+                );
             _uiUtils.ChecklistItem(label, isInstalled);
 
             DrawPluginDetails(plugin, checklistPadding, isInstalled);
+            ImGui.EndGroup();
+            AddConfigClickable(installedPlugin, plugin);
             return isInstalled;
         }
     }
@@ -261,6 +321,7 @@ internal sealed class PluginConfigComponent
                 ImGui.AlignTextToFramePadding();
                 ImGui.TextColored(iconColor, icon.ToIconString());
             }
+            AddConfigClickable(installedPlugin, plugin);
 
             DrawPluginDetails(plugin, checklistPadding, isInstalled);
             return isInstalled || _configuration.General.CombatModule != combatModule;
@@ -299,25 +360,29 @@ internal sealed class PluginConfigComponent
             {
                 if (!allDetailsOk && plugin.ConfigCommand != null && plugin.ConfigCommand.StartsWith('/'))
                 {
-                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Cog, "打开设置"))
+                    ImRaii.ColorDisposable? color = null;
+                    if (!allDetailsOk)
+                        color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudOrange);
+                    if (ImGuiComponentsLocal.IconButton(FontAwesomeIcon.Cog))
                         _commandManager.ProcessCommand(plugin.ConfigCommand);
+                    color?.Dispose();
                 }
             }
             else
             {
-                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Globe, "打开网站"))
+                if (ImGuiComponentsLocal.IconButtonWithText(FontAwesomeIcon.Globe, _L("Open Website")))
                     Util.OpenLink(plugin.WebsiteUri.ToString());
 
                 ImGui.SameLine();
                 if (plugin.DalamudRepositoryUri != null)
                 {
-                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Code, "打开仓库"))
+                    if (ImGuiComponentsLocal.IconButtonWithText(FontAwesomeIcon.Code, _L("Open Repository")))
                         Util.OpenLink(plugin.DalamudRepositoryUri.ToString());
                 }
                 else
                 {
                     ImGui.AlignTextToFramePadding();
-                    ImGuiComponents.HelpMarker("可在官方 Dalamud 插件库中找到");
+                    ImGuiComponents.HelpMarker(_L("Available on official Dalamud Repository"));
                 }
             }
         }

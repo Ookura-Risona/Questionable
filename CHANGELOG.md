@@ -1,2 +1,2 @@
-- Better handling of aetheryte shortcuts -alydev
-- Stop After Quest button -Kage
+- Feature: ng+ tab buttons
+- paths

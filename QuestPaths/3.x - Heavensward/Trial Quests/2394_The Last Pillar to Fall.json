@@ -1,6 +1,7 @@
-{
+﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "liza",
+  "LastChecked": {"Username": "alydev", "Date": "2026-06-19"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -54,6 +55,7 @@
           },
           "StopDistance": 7,
           "TerritoryId": 351,
+          "TargetTerritoryId": 351,
           "InteractionType": "AcceptQuest"
         }
       ]
@@ -61,6 +63,27 @@
     {
       "Sequence": 1,
       "Steps": [
+        {
+          "Position": {
+            "X": -523.8519,
+            "Y": 22.025784,
+            "Z": -512.0333
+          },
+          "TerritoryId": 402,
+          "InteractionType": "WalkTo",
+          "AetheryteShortcut": "Azys Lla - Helix",
+          "Fly": true
+        },
+        {
+          "Position": {
+            "X": -231.93713,
+            "Y": 303.47726,
+            "Z": -311.9725
+          },
+          "TerritoryId": 402,
+          "InteractionType": "WalkTo",
+          "Fly": true
+        },
         {
           "DataId": 2007560,
           "Position": {
@@ -70,7 +93,6 @@
           },
           "TerritoryId": 402,
           "InteractionType": "Interact",
-          "AetheryteShortcut": "Azys Lla - Helix",
           "Fly": true
         }
       ]
@@ -100,7 +122,7 @@
           "DataId": 1018511,
           "Position": {
             "X": -1.449646,
-            "Y": 3.144145E-06,
+            "Y": 0.000003144145,
             "Z": 5.2643433
           },
           "TerritoryId": 507,

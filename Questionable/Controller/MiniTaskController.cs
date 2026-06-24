@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -74,7 +74,7 @@ internal abstract class MiniTaskController<T> : IDisposable
                 {
                     _logger.LogError(e, "Failed to start task {TaskName}", upcomingTask.ToString());
                     _chatGui.PrintError(
-                        $"无法启动任务 '{upcomingTask}', 请使用 /xllog 来获取报错信息", CommandHandler.MessageTag, CommandHandler.TagColor);
+                        $"Failed to start task '{upcomingTask}', please check /xllog for details.", CommandHandler.MessageTag, CommandHandler.TagColor);
                     Stop("Task failed to start");
                     return;
                 }
@@ -99,7 +99,7 @@ internal abstract class MiniTaskController<T> : IDisposable
             _logger.LogError(e, "Failed to update task {TaskName}",
                 _taskQueue.CurrentTaskExecutor.CurrentTask.ToString());
             _chatGui.PrintError(
-                $"无法更新任务 '{_taskQueue.CurrentTaskExecutor.CurrentTask}', 请使用 /xllog 来获取报错信息.", CommandHandler.MessageTag, CommandHandler.TagColor);
+                $"Could not complete '{_taskQueue.CurrentTaskExecutor.CurrentTask}': {e.Message}. Please check /xllog for more details.", CommandHandler.MessageTag, CommandHandler.TagColor);
             Stop("Task failed to update");
             return;
         }
@@ -152,6 +152,15 @@ internal abstract class MiniTaskController<T> : IDisposable
                 OnNextStep(lastTask);
                 return;
 
+            case ETaskResult.RetryStep:
+                _logger.LogInformation("{Task} → {Result}, clearing queue and retrying current step",
+                    _taskQueue.CurrentTaskExecutor.CurrentTask, result);
+
+                _taskQueue.CurrentTaskExecutor = null;
+                _taskQueue.Reset();
+                OnRetryStep();
+                return;
+
             case ETaskResult.End:
                 _logger.LogInformation("{Task} → {Result}", _taskQueue.CurrentTaskExecutor.CurrentTask, result);
                 _taskQueue.CurrentTaskExecutor = null;
@@ -166,6 +175,11 @@ internal abstract class MiniTaskController<T> : IDisposable
 
     protected virtual void OnNextStep(ILastTask task)
     {
+    }
+
+    protected virtual void OnRetryStep()
+    {
+        Stop("RetryStep not supported");
     }
 
     public abstract void Stop(string label);

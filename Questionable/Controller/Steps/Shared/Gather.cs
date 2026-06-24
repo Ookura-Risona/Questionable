@@ -40,7 +40,6 @@ internal static class Gather
     internal sealed class DelayedGatheringExecutor
     (
         GatheringPointRegistry gatheringPointRegistry,
-        TerritoryData territoryData,
         IClientState clientState,
         IObjectTable objectTable,
         IServiceProvider serviceProvider,
@@ -62,6 +61,8 @@ internal static class Gather
 
             if (!gatheringPointRegistry.TryGetGatheringPoint(gatheringPointId, out GatheringRoot? gatheringRoot))
                 throw new TaskException($"No path found for gathering point {gatheringPointId.Value}");
+
+            logger.LogDebug($"Locating and traveling to {gatheringPointId.Value}");
 
             if (HasRequiredItems(Task.GatheredItem))
                 yield break;
@@ -93,7 +94,7 @@ internal static class Gather
 
             uint territoryId = gatheringRoot.Steps.Last().TerritoryId;
             yield return new WaitCondition.Task(() => clientState.TerritoryType == territoryId,
-                $"Wait(territory: {territoryData.GetNameAndId(territoryId)})");
+                $"Wait(territory: {TerritoryData.GetNameAndId(territoryId)})");
 
             yield return new WaitNavmesh.Task();
 

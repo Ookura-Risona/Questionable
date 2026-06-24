@@ -47,7 +47,15 @@
         },
         {
           "TerritoryId": 131,
+          "InteractionType": "CreateGearset"
+        },
+        {
+          "TerritoryId": 131,
           "InteractionType": "EquipRecommended"
+        },
+        {
+          "TerritoryId": 131,
+          "InteractionType": "UpdateGearset"
         },
         {
           "DataId": 1046337,
@@ -132,7 +140,9 @@
             "Z": 434.531
           },
           "TerritoryId": 141,
-          "InteractionType": "SinglePlayerDuty"
+          "InteractionType": "SinglePlayerDuty",
+          "Comment": "Please report in discord whether this solo duty works fine.\nIt has not been tested yet and may fail. Thank you.",
+          "SinglePlayerDutyOptions": {"Enabled": true}
         }
       ]
     },

@@ -1,6 +1,7 @@
 ﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "liza",
+  "LastChecked": {"Username": "goopy_brain", "Date": "2026-06-19"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -29,6 +30,10 @@
           }
         },
         {
+          "TerritoryId": 131,
+          "InteractionType": "CreateGearset"
+        },
+        {
           "Position": {
             "X": -89.28058,
             "Y": 2.150006,
@@ -36,6 +41,7 @@
           },
           "TerritoryId": 131,
           "InteractionType": "UseItem",
+          "DelaySecondsAtStart": 2,
           "ItemId": 20620,
           "SkipConditions": {
             "StepIf": {
@@ -48,6 +54,10 @@
         {
           "TerritoryId": 131,
           "InteractionType": "EquipRecommended"
+        },
+        {
+          "TerritoryId": 131,
+          "InteractionType": "UpdateGearset"
         },
         {
           "DataId": 1023637,
@@ -65,6 +75,14 @@
       "Sequence": 1,
       "Steps": [
         {
+          "TerritoryId": 131,
+          "AethernetShortcut": [
+            "[Ul'dah] Aetheryte Plaza",
+            "[Ul'dah] Gladiators' Guild"
+          ],
+          "InteractionType": "EquipRecommended"
+        },
+        {
           "DataId": 1023637,
           "Position": {
             "X": -89.28058,
@@ -72,7 +90,8 @@
             "Z": 59.739014
           },
           "TerritoryId": 131,
-          "InteractionType": "SinglePlayerDuty"
+          "InteractionType": "SinglePlayerDuty",
+          "SinglePlayerDutyOptions": {"Enabled": true}
         }
       ]
     },

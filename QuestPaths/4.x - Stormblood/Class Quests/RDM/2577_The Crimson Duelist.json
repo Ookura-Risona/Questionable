@@ -1,6 +1,7 @@
 ﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "liza",
+  "LastChecked": {"Username": "goopy_brain", "Date": "2026-06-18"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -17,6 +18,10 @@
               }
             }
           }
+        },
+        {
+          "TerritoryId": 141,
+          "InteractionType": "CreateGearset"
         },
         {
           "DataId": 1021438,
@@ -39,6 +44,10 @@
         {
           "TerritoryId": 141,
           "InteractionType": "EquipRecommended"
+        },
+        {
+          "TerritoryId": 141,
+          "InteractionType": "UpdateGearset"
         },
         {
           "DataId": 1021438,
@@ -89,7 +98,11 @@
             "Z": 28.702148
           },
           "TerritoryId": 145,
-          "InteractionType": "SinglePlayerDuty"
+          "InteractionType": "SinglePlayerDuty",
+          "SinglePlayerDutyOptions": {
+            "Enabled": true,
+            "Notes": ["Needs manual targeting"]
+          }
         }
       ]
     },

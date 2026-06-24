@@ -1,4 +1,4 @@
-﻿obj/
+obj/
 bin/
 .idea
 .vs
@@ -6,4 +6,5 @@ bin/
 !**/.vscode/*.code-snippets
 !.vscode/settings.json
 *.user
+.pi/
 Directory.Build.props

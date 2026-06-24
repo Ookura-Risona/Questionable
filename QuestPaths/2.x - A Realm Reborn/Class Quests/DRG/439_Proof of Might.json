@@ -1,6 +1,7 @@
-{
+﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "Cacahuetes",
+  "LastChecked": {"Username": "alydev", "Date": "2026-06-20"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -64,7 +65,10 @@
             "[Gridania] Lancers' Guild",
             "[Gridania] White Wolf Gate (Central Shroud)"
           ],
-          "Fly": true
+          "Fly": true,
+          "SinglePlayerDutyOptions": {
+            "Enabled": true
+          }
         }
       ]
     },
@@ -81,7 +85,8 @@
           "TerritoryId": 154,
           "InteractionType": "SinglePlayerDuty",
           "SinglePlayerDutyOptions": {
-            "Index": 1
+            "Index": 1,
+            "Enabled": true
           },
           "AetheryteShortcut": "North Shroud - Fallgourd Float",
           "Fly": true
