@@ -1,10 +1,11 @@
 ﻿using System.Linq;
 using ECommons.ExcelServices;
+using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Questionable.Controller.Steps.Common;
 using Questionable.Data;
-using Questionable.Model;
+using Questionable.Domain;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Shared;
 
@@ -51,7 +52,14 @@ internal static class SwitchClassJob
             throw new TaskException($"No gearset found for {Task.ClassJob}");
         }
 
-        protected override ETaskResult UpdateInternal() => ETaskResult.TaskComplete;
+        protected unsafe override ETaskResult UpdateInternal()
+        {
+            if (PlayerState.Instance()->CurrentClassJobId == (uint)Task.ClassJob)
+                return ETaskResult.TaskComplete;
+            if (EzThrottler.Throttle("SwitchJob"))
+                StartInternal();
+            return ETaskResult.StillRunning;
+        }
 
         // can we even take damage while switching jobs? we should be out of combat...
         public override bool ShouldInterruptOnDamage() => false;

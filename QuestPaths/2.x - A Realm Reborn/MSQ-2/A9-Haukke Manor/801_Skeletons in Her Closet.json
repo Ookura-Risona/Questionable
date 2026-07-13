@@ -88,12 +88,7 @@
             "Z": 69.41321
           },
           "TerritoryId": 148,
-          "InteractionType": "Interact",
-          "SkipConditions": {
-            "AethernetShortcutIf": {
-              "InSameTerritory": true
-            }
-          }
+          "InteractionType": "Interact"
         }
       ]
     },
@@ -140,7 +135,7 @@
       "Sequence": 255,
       "Steps": [
         {
-          "TerritoryId": 128,
+          "TerritoryId": 1,
           "InteractionType": "UseItem",
           "ItemId": 30362,
           "TargetTerritoryId": 140,

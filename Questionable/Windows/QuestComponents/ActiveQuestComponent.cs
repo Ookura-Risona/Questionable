@@ -15,14 +15,16 @@ using Microsoft.Extensions.Logging;
 using Questionable.Controller;
 using Questionable.Controller.Steps.Shared;
 using Questionable.Data;
+using Questionable.Domain;
 using Questionable.Functions;
-using Questionable.Model;
+using Questionable.Model.Common;
 using Questionable.Model.Questing;
 using Questionable.PathData;
 using Questionable.Utils;
 using static Questionable.Utils.LocalizeShortcut;
 namespace Questionable.Windows.QuestComponents;
 
+// TODO: refactor — heavy nesting (43 lines indented ≥6 levels, max indent ~13 levels).
 internal sealed partial class ActiveQuestComponent
 (
     QuestController questController,
@@ -118,23 +120,23 @@ internal sealed partial class ActiveQuestComponent
 
             DrawSimulationControls();
 
-            ImGui.SameLine();
-            bool editButtonLeft = ImGuiComponentsLocal.IconButton(FontAwesomeIcon.Edit);
-            bool editButtonRight = ImGui.IsItemClicked(ImGuiMouseButton.Right);
-            if (editButtonLeft)
-            {
-                (bool success, string filename) = currentQuest != null ? QuestRegistry.OpenEditor(currentQuest.Quest.Info) : _questRegistry.OpenEditor();
-                _logger.LogDebug("OpenEditor {Success}: {Filename}", success, filename);
-            }
-            else if (editButtonRight)
-            {
-                QuestRegistry.OpenFolder();
-                _logger.LogDebug("OpenFolder executed");
-            }
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(QuestRegistry.OpenEditorDescription);
             if (_configuration.Advanced.Debug)
             {
+                ImGui.SameLine();
+                bool editButtonLeft = ImGuiComponentsLocal.IconButton(FontAwesomeIcon.Edit);
+                bool editButtonRight = ImGui.IsItemClicked(ImGuiMouseButton.Right);
+                if (editButtonLeft)
+                {
+                    (bool success, string filename) = currentQuest != null ? QuestRegistry.OpenEditor(currentQuest.Quest.Info) : _questRegistry.OpenEditor();
+                    _logger.LogDebug("OpenEditor {Success}: {Filename}", success, filename);
+                }
+                else if (editButtonRight)
+                {
+                    QuestRegistry.OpenFolder();
+                    _logger.LogDebug("OpenFolder executed");
+                }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(QuestRegistry.OpenEditorDescription);
                 ImGui.SameLine();
                 if (ImGuiComponentsLocal.IconButton(FontAwesomeIcon.Ban) && currentQuest != null)
                 {
@@ -225,14 +227,16 @@ internal sealed partial class ActiveQuestComponent
                 if (startedQuest.Quest.Source == Quest.ESource.UserDirectory)
                 {
                     ImGui.PushFont(UiBuilder.IconFont);
-                    ImGui.TextColored(ImGuiColors.DalamudOrange, FontAwesomeIcon.FilePen.ToIconString());
+                    ImGui.TextColored(ImGuiColors.DalamudRed, FontAwesomeIcon.FilePen.ToIconString());
                     ImGui.PopFont();
                     ImGui.SameLine(0);
 
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip(
-                            _L("This quest is loaded from your 'pluginConfigs\\Questionable\\Quests' directory.\nThis gets loaded even if Questionable ships with a newer/different version of the quest."));
+                            _L("This quest is loaded from your Quests folder, probably because you (accidentally) clicked the Edit button below.\n" +
+                                "This gets loaded even if Questionable ships with a newer/different version of the quest.\n" +
+                                "If you experience issues, please right click the Edit button, delete the file for this quest, and click Reload Data."));
                     }
                 }
 

@@ -1,7 +1,8 @@
-{
+﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "pot0to",
-  "LastChecked":{"Username": "alydev", "Date": "2026-05-19"},
+  "Interruptible": false,
+  "LastChecked": {"Username": "catsume", "Date": "2026-06-20"},
   "QuestSequence": [
     {
       "Sequence": 0,
@@ -17,11 +18,6 @@
           "InteractionType": "AcceptQuest",
           "AetheryteShortcut": "South Shroud - Quarrymill",
           "Fly": true,
-          "SkipConditions": {
-            "AetheryteShortcutIf": {
-              "InSameTerritory": true
-            }
-          },
           "DialogueChoices": [
             {
               "Type": "YesNo",
@@ -158,11 +154,6 @@
           "InteractionType": "CompleteQuest",
           "AetheryteShortcut": "South Shroud - Quarrymill",
           "Fly": true,
-          "SkipConditions": {
-            "AetheryteShortcutIf": {
-              "InSameTerritory": true
-            }
-          },
           "NextQuestId": 1090
         }
       ]

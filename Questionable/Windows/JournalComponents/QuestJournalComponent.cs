@@ -5,17 +5,14 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
-using ECommons.DalamudServices;
 using Questionable.Controller;
 using Questionable.Data;
+using Questionable.Domain;
 using Questionable.Functions;
-using Questionable.Model;
 using Questionable.Validation;
 using Questionable.Windows.QuestComponents;
 using Questionable.Windows.Utils;
@@ -32,12 +29,8 @@ internal sealed class QuestJournalComponent
     IDalamudPluginInterface pluginInterface,
     QuestJournalUtils questJournalUtils,
     QuestValidator questValidator,
-    MovementController movementController,
-    AetheryteFunctions aetheryteFunctions,
-    AetheryteData aetheryteData,
     QuestController questController,
-    RedoUtil redoUtil,
-    IGameGui gameGui)
+    RedoUtil redoUtil)
 {
     private readonly Dictionary<JournalData.Category, JournalCounts> _categoryCounts = [];
     private readonly Dictionary<JournalData.Genre, JournalCounts> _genreCounts = [];
@@ -155,7 +148,7 @@ internal sealed class QuestJournalComponent
         ImGui.TableNextColumn();
 
         string genreName = filter.Genre.Name;
-        if (questRegistry.TryGetQuest(filter.Quests.First().QuestId, out Quest? q))
+        if (questRegistry.TryGetQuest(filter.Quests[0].QuestId, out Quest? q))
         {
             RedoIndex redoIndex = redoUtil.GetChapter(q.Id.Value);
             if (redoIndex.Index != -1)
@@ -195,9 +188,9 @@ internal sealed class QuestJournalComponent
             {
                 lastCheckedLong = "\n" + _LF("Last checked: {0}", quest.Root.LastChecked);
                 int since = (int)quest.Root.LastChecked.Since(DateTime.Now)!.Value.TotalDays;
-                if (since < 7)
+                if (since >= 0 && since < 7)
                     lastChecked = $"{since}d";
-                else
+                else if (since >= 7)
                     lastChecked = $"{since / 7}w";
             }
             RedoIndex redoIndex = redoUtil.GetChapter(quest.Id.Value);
@@ -221,28 +214,7 @@ internal sealed class QuestJournalComponent
             questTooltipComponent.Draw(questInfo);
 
         if (ImGui.IsItemClicked())
-        {
-            var location = questInfo.IssuerLocation;
-            Svc.Log.Debug(location.ToString() ?? "SheetLevel()");
-            var mapLink = new MapLinkPayload(
-                location.Territory.RowId,
-                location.Map.RowId,
-                location.Game.X,
-                location.Game.Z
-            );
-            bool openedMap = gameGui.OpenMapWithMapLink(mapLink);
-            if (location.Territory.RowId.Equals(Svc.ClientState.TerritoryType))
-                movementController.NavigateTo(EMovementType.None, questInfo.IssuerDataId, location.Position, new()
-                {
-                    Fly = GameFunctions.IsFlyingUnlocked(location.Territory.RowId) ? true : false,
-                    Sprint = true,
-                    StopDistance = 20f,
-                    VerticalStopDistance = 5f,
-                });
-            else
-                if (aetheryteData.NearestAetheryteTo(location.Territory.RowId, location.Position) is { } aetheryte)
-                    aetheryteFunctions.TeleportAetheryte(aetheryte);
-        }
+            questJournalUtils.MoveToQuestLocation(questInfo);
 
         questJournalUtils.ShowContextMenu(questInfo, quest, nameof(QuestJournalComponent));
 
@@ -292,20 +264,20 @@ internal sealed class QuestJournalComponent
                 if (uiUtils.ChecklistItem(lastChecked, ImGuiColors.ParsedBlue, FontAwesomeIcon.InfoCircle))
                     ImGui.SetTooltip(_L("This quest had validation issues."));
             }
-            else if (uiUtils.ChecklistItem(lastChecked, true))
+            else if (uiUtils.ChecklistItem(lastChecked, complete: true))
                 ImGui.SetTooltip(_L("This quest is supported.") + lastCheckedLong + (!reason.Equals(defaultReason, StringComparison.Ordinal) ? "\n" + _LF("Comment: {0}", reason) : ""));
         }
         else
         {
             if (quest == null)
                 reason = ("No quest path.");
-            if (uiUtils.ChecklistItem(lastChecked, false))
+            if (uiUtils.ChecklistItem(lastChecked, complete: false))
                 ImGui.SetTooltip(_L("This quest is not yet supported.") + lastCheckedLong + (!reason.Equals(defaultReason, StringComparison.Ordinal) ? "\n" + _LF("Reason: {0}", reason) : ""));
         }
 
         ImGui.TableNextColumn();
         (Vector4 color, FontAwesomeIcon icon, string text) = uiUtils.GetQuestStyle(questInfo.QuestId);
-        uiUtils.ChecklistItem(text, color, icon);
+        uiUtils.ChecklistItem(text.Split(',', 1)[0], color, icon);
     }
 
     internal static void DrawCount(int count, int total)
@@ -314,11 +286,15 @@ internal sealed class QuestJournalComponent
         ImGui.PushFont(UiBuilder.MonoFont);
 
         if (total == 0)
-            ImGui.TextColored(ImGuiColors.DalamudGrey, $"{" ".PadLeft(len.Length)} - {" ".PadLeft(len.Length)}");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, $"{" ".PadLeft(len.Length)} - {" ".PadRight(len.Length)}");
+        else if (count == 0)
+        {
+            ImGui.TextUnformatted($"{"-".PadLeft(len.Length)} / {total.ToString(CultureInfo.CurrentCulture).PadRight(len.Length)}?");
+        }
         else
         {
             string text =
-                $"{count.ToString(CultureInfo.CurrentCulture).PadLeft(len.Length)} / {total.ToString(CultureInfo.CurrentCulture).PadLeft(len.Length)}";
+                $"{count.ToString(CultureInfo.CurrentCulture).PadLeft(len.Length)} / {total.ToString(CultureInfo.CurrentCulture).PadRight(len.Length)}";
             if (count == total)
                 ImGui.TextColored(ImGuiColors.ParsedGreen, text);
             else

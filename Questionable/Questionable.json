@@ -1,6 +1,6 @@
 {
   "Name": "Questionable",
-  "Author": "liza, qstxiv, & various contributors, decorwdyun(汉化)",
+  "Author": "liza, qstxiv, & various contributors, decorwdyun(原汉化), Ookura-Risona(国服维护)",
   "Punchline": "一个小小的自动任务插件。",
   "Description": "一个小小的自动任务插件，可以在尽可能的情况下自动完成游戏任务。使用寻路自动前往任务目标点，并尽量自动完成所有步骤。\n\n并非所有任务都受支持，请查看 Discord 或 Git 仓库以获取最新的支持任务列表。\n\n所需插件：vnavmesh, TextAdvance, Lifestream",
   "Tags": [
@@ -11,7 +11,7 @@
     "任务",
     "主线任务"
   ],
-  "RepoUrl": "https://github.com/decorwdyun/Questionable",
+  "RepoUrl": "https://github.com/Ookura-Risona/Questionable",
   "IconUrl": "https://puni.sh/api/plugins/icon/94",
   "DalamudApiLevel": 15
 }

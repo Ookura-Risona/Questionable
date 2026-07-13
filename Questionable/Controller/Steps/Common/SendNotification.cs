@@ -2,17 +2,19 @@
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Plugin.Services;
 using Questionable.Data;
+using Questionable.Domain;
 using Questionable.External;
-using Questionable.Model;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Common;
 
+// TODO: refactor — heavy nesting (22 lines indented ≥6 levels, max indent 8 levels).
 internal static class SendNotification
 {
     internal sealed class Factory
     (
         AutomatonIpc automatonIpc,
         AutoDutyIpc autoDutyIpc,
+        IAutoHookIpc autoHookIpc,
         BossModIpc bossModIpc,
         TerritoryData territoryData) : SimpleTaskFactory
     {
@@ -28,6 +30,8 @@ internal static class SendNotification
                         : step.Comment),
                 EInteractionType.SinglePlayerDuty when !bossModIpc.IsConfiguredToRunSoloInstance(quest.Id, step.SinglePlayerDutyOptions) =>
                     new Task(step.InteractionType, quest.Info.Name),
+                EInteractionType.Fish when !autoHookIpc.IsAvailable() =>
+                    new(step.InteractionType, step.Comment ?? "AutoHook plugin is required for automatic fishing"),
                 var _ => null
             };
         }
@@ -51,10 +55,11 @@ internal static class SendNotification
 
             string text = Task.InteractionType switch
             {
-                EInteractionType.Duty => "副本",
-                EInteractionType.SinglePlayerDuty => "单人任务",
-                EInteractionType.Instruction or EInteractionType.WaitForManualProgress or EInteractionType.Snipe =>
-                    "需要手动操作",
+                EInteractionType.Duty => "Duty",
+                EInteractionType.SinglePlayerDuty => "Single player duty",
+                EInteractionType.Instruction or EInteractionType.WaitForManualProgress or EInteractionType.Snipe
+                    or EInteractionType.Fish =>
+                    "Manual interaction required",
                 var _ => $"{Task.InteractionType}"
             };
 

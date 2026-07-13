@@ -7,4 +7,3 @@ bin/
 !.vscode/settings.json
 *.user
 .pi/
-Directory.Build.props

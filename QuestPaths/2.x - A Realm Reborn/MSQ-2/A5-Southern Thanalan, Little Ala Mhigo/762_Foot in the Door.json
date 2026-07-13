@@ -15,12 +15,7 @@
           },
           "TerritoryId": 146,
           "InteractionType": "AcceptQuest",
-          "AetheryteShortcut": "Southern Thanalan - Little Ala Mhigo",
-          "SkipConditions": {
-            "AetheryteShortcutIf": {
-              "InSameTerritory": true
-            }
-          }
+          "AetheryteShortcut": "Southern Thanalan - Little Ala Mhigo"
         }
       ]
     },
@@ -28,7 +23,7 @@
       "Sequence": 255,
       "Steps": [
         {
-          "TerritoryId": 128,
+          "TerritoryId": 1,
           "InteractionType": "UseItem",
           "ItemId": 30362,
           "TargetTerritoryId": 140,

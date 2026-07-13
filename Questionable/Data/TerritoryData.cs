@@ -8,7 +8,9 @@ using Dalamud.Game;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using Lumina.Excel.Sheets;
+using Questionable.Model.Common;
 using Questionable.Model.Questing;
+using Quest = Lumina.Excel.Sheets.Quest;
 namespace Questionable.Data;
 
 internal sealed class TerritoryData
@@ -69,9 +71,9 @@ internal sealed class TerritoryData
     {
         string? territoryName = GetName(territoryId);
         if (territoryName != null)
-            return string.Create(CultureInfo.InvariantCulture, $"{territoryName} ({territoryId})");
-        else
-            return territoryId.ToString(CultureInfo.InvariantCulture);
+            return $"{territoryName} ({territoryId})";
+
+        return territoryId.ToString(CultureInfo.InvariantCulture);
     }
 
     public bool CanUseMount(uint territoryId) => _territoriesWithMount.Contains(territoryId);
@@ -92,11 +94,9 @@ internal sealed class TerritoryData
     {
         if (_questBattlesToContentFinderCondition.TryGetValue((questId, index), out uint cfcId))
             return _contentFinderConditions.TryGetValue(cfcId, out contentFinderConditionData);
-        else
-        {
-            contentFinderConditionData = null;
-            return false;
-        }
+
+        contentFinderConditionData = null;
+        return false;
     }
 
     public IEnumerable<(ElementId QuestId, byte Index, ContentFinderConditionData Data)> GetAllQuestsWithQuestBattles() => _questBattlesToContentFinderCondition.Select(x => (x.Key.QuestId, x.Key.Index, _contentFinderConditions[x.Value]));
@@ -126,8 +126,8 @@ internal sealed class TerritoryData
     {
         if (questBattleId >= 5000)
             return dataManager.GetExcelSheet<InstanceContent>().GetRow(questBattleId).ContentFinderCondition.RowId;
-        else
-            return dataManager.GetExcelSheet<QuestBattleResident>().GetRow(questBattleId).SoloDuty.RowId;
+
+        return dataManager.GetExcelSheet<QuestBattleResident>().GetRow(questBattleId).SoloDuty.RowId;
     }
 
     public sealed record ContentFinderConditionData
@@ -136,11 +136,13 @@ internal sealed class TerritoryData
         string Name,
         uint TerritoryId,
         ushort RequiredItemLevel,
-        byte ClassJobLevelSync)
+        byte ClassJobLevelSync,
+        EContentType? ContentType)
     {
         public ContentFinderConditionData(ContentFinderCondition condition, ClientLanguage clientLanguage)
             : this(condition.RowId, FixName(condition.Name.ToDalamudString().ToString(), clientLanguage),
-                condition.TerritoryType.RowId, condition.ItemLevelRequired, condition.ClassJobLevelSync)
+                condition.TerritoryType.RowId, condition.ItemLevelRequired, condition.ClassJobLevelSync,
+                (EContentType?)condition.ContentType.ValueNullable?.RowId)
         {
         }
     }

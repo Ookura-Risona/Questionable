@@ -8,13 +8,14 @@ using Dalamud.Plugin.Services;
 using Questionable.Controller.Steps.Common;
 using Questionable.Controller.Utils;
 using Questionable.Data;
+using Questionable.Domain;
 using Questionable.External;
 using Questionable.Functions;
-using Questionable.Model;
 using Questionable.Model.Questing;
 using Questionable.Windows.Utils;
 namespace Questionable.Controller.Steps.Shared;
 
+// TODO: refactor — heavy nesting (27 lines indented ≥6 levels, max indent ~9 levels).
 internal static class WaitAtEnd
 {
     internal sealed class Factory
@@ -22,8 +23,11 @@ internal static class WaitAtEnd
         IObjectTable objectTable,
         ICondition condition,
         AutoDutyIpc autoDutyIpc,
+        IAutoHookIpc autoHookIpc,
         BossModIpc bossModIpc,
-        RedoUtil redoUtil)
+        RedoUtil redoUtil,
+        QuestData questData,
+        IDataManager dataManager)
         : ITaskFactory
     {
         public IEnumerable<ITask> CreateAllTasks(Quest quest, QuestSequence sequence, QuestStep step)
@@ -58,6 +62,7 @@ internal static class WaitAtEnd
 
                 case EInteractionType.Duty when !autoDutyIpc.IsConfiguredToRunContent(step.DutyOptions):
                 case EInteractionType.SinglePlayerDuty when !bossModIpc.IsConfiguredToRunSoloInstance(quest.Id, step.SinglePlayerDutyOptions):
+                case EInteractionType.Fish when !autoHookIpc.IsAvailable():
                     return [new EndAutomation()];
 
                 case EInteractionType.WalkTo:
@@ -66,6 +71,7 @@ internal static class WaitAtEnd
                     return [Next(quest, sequence)];
 
                 case EInteractionType.WaitForObjectAtPosition:
+                case EInteractionType.WaitForNpcAtPosition:
                     if (!step.DataId.HasValue)
                         throw new ArgumentNullException(nameof(step.DataId));
                     if (!step.Position.HasValue)
@@ -120,18 +126,18 @@ internal static class WaitAtEnd
                                 return [delay, Next(quest, sequence)];
                             return [accept, delay, Next(quest, sequence)];
                         }
-                        else
-                            return [accept, delay];
+
+                        return [accept, delay];
                     }
 
                 case EInteractionType.CompleteQuest:
                     {
                         WaitQuestCompleted complete = new(step.TurnInQuestId ?? quest.Id);
                         WaitDelay delay = new();
+                        List<ITask> tasks = [complete, delay, .. RedeemRewardItems.CreateRedeemTasks(questData, dataManager)];
                         if (step.TurnInQuestId != null)
-                            return [complete, delay, Next(quest, sequence)];
-                        else
-                            return [complete, delay];
+                            tasks.Add(Next(quest, sequence));
+                        return tasks;
                     }
 
                 case EInteractionType.Interact:
@@ -146,10 +152,10 @@ internal static class WaitAtEnd
     internal sealed record WaitDelay(TimeSpan Delay, string? Message) : ITask
     {
         public WaitDelay()
-            : this(TimeSpan.FromSeconds(1), null)
+            : this(TimeSpan.FromSeconds(1), Message: null)
         {
         }
-        public WaitDelay(TimeSpan Delay) : this(Delay, null)
+        public WaitDelay(TimeSpan Delay) : this(Delay, Message: null)
         {
         }
 

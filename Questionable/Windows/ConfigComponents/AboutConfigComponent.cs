@@ -26,18 +26,22 @@ internal sealed class AboutConfigComponent : ConfigComponent
         ImGui.SameLine();
         ImGui.TextColored(ImGuiColors.DalamudOrange, "Liza Carvelli");
         
-        ImGui.Text("汉化&国服特供：");
+        ImGui.Text("原汉化&国服特供：");
         ImGui.SameLine();
         ImGui.TextColored(ImGuiColors.DalamudOrange, "decorwdyun");
+
+        ImGui.Text("当前国服维护：");
+        ImGui.SameLine();
+        ImGui.TextColored(ImGuiColors.DalamudOrange, "Ookura-Risona");
         
         if (ImGui.Button("问题反馈（只处理汉化&国服特有的问题）"))
         {
-            Util.OpenLink("https://github.com/decorwdyun/Questionable/issues/new");
+            Util.OpenLink("https://github.com/Ookura-Risona/Questionable/issues/new");
         }
         ImGui.SameLine();
-        if (ImGui.Button("汉化作者维护的更多插件"))
+        if (ImGui.Button("国服维护者的插件源"))
         {
-            Util.OpenLink("https://github.com/decorwdyun/DalamudPlugins");
+            Util.OpenLink("https://github.com/Ookura-Risona/DalamudPlugins");
         }
 
     }

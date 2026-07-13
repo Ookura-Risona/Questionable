@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Xml.Linq;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
@@ -18,6 +16,7 @@ using FFXIVClientStructs.FFXIV.Application.Network.WorkDefinitions;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Microsoft.Extensions.Logging;
 using Questionable.Data;
+using Questionable.Domain;
 using Questionable.Functions;
 using Questionable.Model;
 using Questionable.Model.Questing;
@@ -26,12 +25,13 @@ using Questionable.QuestPaths;
 using Questionable.Utils;
 using Questionable.Validation;
 using Questionable.Validation.Validators;
-using static Questionable.Model.QuestInfo;
+using static Questionable.Domain.QuestInfo;
 using static Questionable.Utils.CacheUtils;
-using Sheets = Lumina.Excel.Sheets;
 using static Questionable.Utils.LocalizeShortcut;
+using Sheets = Lumina.Excel.Sheets;
 namespace Questionable.Controller;
 
+// TODO: refactor — heavy nesting (29 lines indented ≥6 levels, max indent ~8 levels).
 internal sealed class QuestRegistry
 {
     private readonly IChatGui _chatGui;
@@ -94,21 +94,23 @@ internal sealed class QuestRegistry
             //LoadQuestsFromAssembly();
             _logger.LogWarning("Bundled quests were not loaded, we have no quests!");
         if (_configuration.Advanced.Debug || Svc.PluginInterface.IsDev
-        #if DEBUG
+#if DEBUG
         || true
-        #endif
+#endif
         )
+        {
             LoadQuestsFromProjectDirectory();
 
-        try
-        {
-            var _ = LoadFromDirectory(new(Path.Combine(_pluginInterface.ConfigDirectory.FullName, "Quests")),
-                Quest.ESource.UserDirectory);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e,
-                "Failed to load all quests from user directory (some may have been successfully loaded)");
+            try
+            {
+                var _ = LoadFromDirectory(new(Path.Combine(_pluginInterface.ConfigDirectory.FullName, "Quests")),
+                    Quest.ESource.UserDirectory);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,
+                    "Failed to load all quests from user directory (some may have been successfully loaded)");
+            }
         }
 
         LoadCfcIds();
@@ -428,11 +430,11 @@ internal sealed class QuestRegistry
             Steps = [
                     new QuestStep(
                         EInteractionType.CompleteQuest,
-                        info.ToDoLocations.Last().Object.RowId,
-                        info.ToDoLocations.Last().Position,
-                        info.ToDoLocations.Last().Territory.RowId
+                        info.ToDoLocations[^1].Object.RowId,
+                        info.ToDoLocations[^1].Position,
+                        info.ToDoLocations[^1].Territory.RowId
                     ) {
-                        Fly = GameFunctions.IsFlyingUnlocked(info.ToDoLocations.Last().Territory.RowId) ? true : null
+                        Fly = GameFunctions.IsFlyingUnlocked(info.ToDoLocations[^1].Territory.RowId) ? true : null
                     }
                 ]
         };

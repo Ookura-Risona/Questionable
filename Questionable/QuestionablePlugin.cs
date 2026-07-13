@@ -8,12 +8,14 @@ using Dalamud.Plugin.Services;
 using ECommons;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PunishLib;
 using Questionable.Controller;
 using Questionable.Controller.CombatModules;
 using Questionable.Controller.GameUi;
 using Questionable.Controller.NavigationOverrides;
 using Questionable.Controller.Steps;
 using Questionable.Controller.Steps.Common;
+using Questionable.Controller.Steps.Fishing;
 using Questionable.Controller.Steps.Gathering;
 using Questionable.Controller.Steps.Interactions;
 using Questionable.Controller.Steps.Movement;
@@ -34,7 +36,6 @@ using Questionable.Windows.JournalComponents;
 using Questionable.Windows.QuestComponents;
 using Questionable.Windows.Utils;
 using WrathCombo.API;
-using PunishLib;
 using static Questionable.Utils.LocalizeShortcut;
 using Action = Questionable.Controller.Steps.Interactions.Action;
 using WrathError = WrathCombo.API.WrathIPCWrapper.ErrorType;
@@ -84,14 +85,15 @@ public sealed class QuestionablePlugin : IDalamudPlugin
             {
                 Type = NotificationType.Error,
                 Title = "加载验证",
-                Content = "由于本地加载或安装来源仓库非 decorwdyun 个人仓库，插件禁止加载。",
+                Content = "由于本地加载或安装来源不是 Ookura-Risona 维护的国服插件源，插件禁止加载。",
             });
             return;
         }
 #endif
 
         WrathIPCWrapper.Init(pluginInterface, WrathError.IPCNotReady | WrathError.Unexpected);
-        PunishLibMain.Init(pluginInterface, "Questionable", new AboutPlugin() {
+        PunishLibMain.Init(pluginInterface, "Questionable", new AboutPlugin()
+        {
             Developer = "alydev",
             Sponsor = "https://github.com/sponsors/alydevs"
         });
@@ -123,13 +125,21 @@ public sealed class QuestionablePlugin : IDalamudPlugin
             serviceCollection.AddSingleton(new WindowSystem(nameof(Questionable)));
 
             var savedConfig = (Configuration?)pluginInterface.GetPluginConfig();
-            if (savedConfig != null && savedConfig?.Version != Configuration.PluginConfigVersion)
+            if (savedConfig != null && savedConfig.Version != Configuration.PluginConfigVersion)
             {
                 // Backup config when version changes
-                pluginInterface.ConfigFile.CopyTo(Path.ChangeExtension(pluginInterface.ConfigFile.FullName, ".json.bak"), true);
-                savedConfig?.Version = Configuration.PluginConfigVersion;
+                pluginInterface.ConfigFile.CopyTo(Path.ChangeExtension(pluginInterface.ConfigFile.FullName, ".json.bak"), overwrite: true);
+                savedConfig.Version = Configuration.PluginConfigVersion;
             }
+
             var configuration = savedConfig ?? new Configuration();
+            if (!configuration.AutoRedeemOffResetApplied)
+            {
+                configuration.ApplyAutoRedeemRewardItemsInitialReset();
+                configuration.AutoRedeemOffResetApplied = true;
+                pluginInterface.SavePluginConfig(configuration);
+            }
+
             serviceCollection.AddSingleton(configuration);
             Questionable.Utils.LocalizeShortcut.Initialize(configuration);
 
@@ -141,6 +151,8 @@ public sealed class QuestionablePlugin : IDalamudPlugin
 
             serviceCollection.AddSingleton<CommandHandler>();
             serviceCollection.AddSingleton<DalamudInitializer>();
+
+            serviceCollection.AddSingleton<IFishingPresetGenerator, FishingPresetGenerator>();
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
             Initialize(_serviceProvider);
@@ -167,7 +179,7 @@ public sealed class QuestionablePlugin : IDalamudPlugin
         serviceCollection.AddSingleton<ChatFunctions>();
         serviceCollection.AddSingleton<QuestFunctions>();
         serviceCollection.AddSingleton<AlliedSocietyQuestFunctions>();
-        serviceCollection.AddSingleton<IGameGuiAdapter, LLibGameGuiAdapter>();
+        serviceCollection.AddSingleton<IGameGuiAdapter, GameGuiAdapter>();
         serviceCollection.AddSingleton<Mount.MountEvaluator>();
 
         serviceCollection.AddSingleton<AetherCurrentData>();
@@ -180,6 +192,7 @@ public sealed class QuestionablePlugin : IDalamudPlugin
         serviceCollection.AddSingleton<NavmeshIpc>();
         serviceCollection.AddSingleton<LifestreamIpc>();
         serviceCollection.AddSingleton<ArtisanIpc>();
+        serviceCollection.AddSingleton<IAutoHookIpc, AutoHookIpc>();
         serviceCollection.AddSingleton<QuestionableIpc>();
         serviceCollection.AddSingleton<TextAdvanceIpc>();
         serviceCollection.AddSingleton<NotificationMasterIpc>();
@@ -282,6 +295,7 @@ public sealed class QuestionablePlugin : IDalamudPlugin
             .AddTaskFactoryAndExecutor<EquipRecommended.EquipTask, EquipRecommended.Factory,
                 EquipRecommended.DoEquipRecommended>();
         serviceCollection.AddTaskFactoryAndExecutor<Craft.CraftTask, Craft.Factory, Craft.DoCraft>();
+        serviceCollection.AddTaskFactoryAndExecutor<Fish.FishTask, Fish.Factory, Fish.DoFish>();
         serviceCollection
             .AddTaskFactoryAndExecutor<TurnInDelivery.Task, TurnInDelivery.Factory,
                 TurnInDelivery.SatisfactionSupplyTurnIn>();

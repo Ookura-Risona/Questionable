@@ -41,7 +41,6 @@ internal sealed class PandorasBoxIpc : IDisposable
     private readonly ICallGateSubscriber<string, bool, object?> _setFeatureEnabled;
     private readonly TerritoryData _territoryData;
 
-    private bool _loggedIpcError;
     private HashSet<string>? _pausedFeatures;
 
     public PandorasBoxIpc(IDalamudPluginInterface pluginInterface,
@@ -72,7 +71,7 @@ internal sealed class PandorasBoxIpc : IDisposable
             {
                 return _getFeatureEnabled.InvokeFunc("Auto Active Time Maneuver") == true;
             }
-            catch (IpcError e)
+            catch (IpcError)
             {
                 // if (!_loggedIpcError)
                 // {
@@ -120,7 +119,7 @@ internal sealed class PandorasBoxIpc : IDisposable
                     _logger.LogInformation("Paused Pandora's Box feature: {Feature}", feature);
                 }
             }
-            catch (IpcError e)
+            catch (IpcError)
             {
                 // _logger.LogWarning(e, "Failed to pause Pandora's Box feature: {Feature}", feature);
             }
@@ -139,7 +138,7 @@ internal sealed class PandorasBoxIpc : IDisposable
                 _setFeatureEnabled.InvokeAction(feature, true);
                 _logger.LogInformation("Restored Pandora's Box feature: {Feature}", feature);
             }
-            catch (IpcError e)
+            catch (IpcError)
             {
                 // _logger.LogWarning(e, "Failed to restore Pandora's Box feature: {Feature}", feature);
             }

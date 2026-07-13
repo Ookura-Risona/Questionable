@@ -22,35 +22,35 @@
 注意：
 
 - Debug 构建必须仍可本地调试。
-- 如果插件源地址变更，需要同步更新 `RepoCheck()`。
+- 当前允许 `https://gh.risona.top/pluginmaster.json` 和包含 `Ookura-Risona/DalamudPlugins` 的来源。
+- 如果插件源地址变更，需要同步更新 `RepoCheck()`、拦截通知文案和插件元数据。
 
 ### 汉化版发布流程和插件元数据
 
 相关文件：
 
 - `.github/workflows/release.yml`
-- `.gitignore`
 - `Questionable/Questionable.json`
 
 保留内容：
 
 - `release.yml` 按 `*-cn` 标签发布汉化版。
 - 从标签去掉 `-cn` 得到版本号，完整标签写入 InformationalVersion。
-- `Questionable.json` 使用汉化版作者、说明、标签和仓库地址。
-- `.gitignore` 忽略 `Directory.Build.props`。
+- `Questionable.json` 保留原汉化作者署名，并使用当前国服维护者、说明、标签和仓库地址。
 
 ### AEAssist 战斗模块
 
 相关文件：
 
 - `Questionable/Controller/CombatModules/AEAssistModule.cs`
+- `Questionable.Model/Common/ECombatModule.cs`
 - `Questionable/Configuration.cs`
 - `Questionable/QuestionablePlugin.cs`
 - `Questionable/Windows/ConfigComponents/PluginConfigComponent.cs`
 
 保留内容：
 
-- `Configuration.ECombatModule.AEAssist`。
+- `Questionable.Model.Common.ECombatModule.AEAssist`。
 - DI 中注册 `ICombatModule, AeAssistModule`。
 - 配置页能选择 AEAssist。
 - 开始战斗时执行 AEAssist 拉怪相关命令，停止时恢复停手命令。
@@ -155,3 +155,7 @@
 ### 手写水晶中文名全集
 
 DailyRoutines 传送不再要求在 `EAetheryteLocation` 中维护整段手写中文名。优先从 Lumina 数据读取名称，只对特殊地点保留小映射。
+
+### 忽略 `Directory.Build.props`
+
+上游现已跟踪根目录的 `Directory.Build.props`，用于统一配置代码分析器。`.gitignore` 中旧的忽略规则对已跟踪文件无效，也不再属于汉化发布流程要求，因此不再保留。

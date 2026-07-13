@@ -1,2 +1,2 @@
-- Feature: ng+ tab buttons
-- paths
+- Feature: "hide remaining tasks" config -alydev
+- Change: General tab in config has collapsible headers now -alydev
