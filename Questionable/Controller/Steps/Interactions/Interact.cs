@@ -15,7 +15,6 @@ using Questionable.Controller.Steps.Shared;
 using Questionable.Controller.Utils;
 using Questionable.Data;
 using Questionable.Domain;
-using Questionable.External;
 using Questionable.Functions;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
@@ -27,7 +26,10 @@ namespace Questionable.Controller.Steps.Interactions;
 // TODO: refactor — heavy nesting (22 lines indented ≥6 levels, max indent ~12 levels).
 internal static class Interact
 {
-    internal sealed class Factory(AutomatonIpc automatonIpc, Configuration configuration, RedoUtil redoUtil) : ITaskFactory
+    internal static bool IsInteractionTask(EInteractionType interactionType) =>
+        interactionType is EInteractionType.Interact or EInteractionType.Snipe;
+
+    internal sealed class Factory(Configuration configuration, RedoUtil redoUtil) : ITaskFactory
     {
         public IEnumerable<ITask> CreateAllTasks(Quest quest, QuestSequence sequence, QuestStep step)
         {
@@ -67,17 +69,12 @@ internal static class Interact
                 if (step.DataId == null)
                     yield break;
             }
-            else if (step.InteractionType == EInteractionType.Snipe)
-            {
-                if (!automatonIpc.IsAutoSnipeEnabled)
-                    yield break;
-            }
             else if (step.InteractionType == EInteractionType.UnlockTaxiStand)
             {
                 if (step.TaxiStandId == null)
                     yield break;
             }
-            else if (step.InteractionType != EInteractionType.Interact)
+            else if (!IsInteractionTask(step.InteractionType))
                 yield break;
             if (!step.DataId.HasValue)
                 throw new ArgumentNullException(nameof(step.DataId));

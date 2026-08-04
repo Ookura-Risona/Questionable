@@ -93,6 +93,7 @@
 保留内容：
 
 - 在 Questionable 运行时自动处理狙击小游戏，减少对 Automaton/CBT AutoSnipe 的依赖。
+- `Snipe` 必须始终进入 Questionable 的交互任务；不得因为 Automaton 未安装或其 AutoSnipe 开关关闭而提前跳过或生成手动等待通知。
 - 签名 hook 更新后必须实际测试；如果上游未来提供等价内置实现，可改用上游实现。
 
 ### 默认关闭上游问题上报
