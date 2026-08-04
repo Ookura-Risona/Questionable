@@ -1,22 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
-using ECommons.DalamudServices;
-using Questionable.Controller;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.Functions;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
-using Questionable.Utils;
-using static Questionable.Utils.LocalizeShortcut;
 namespace Questionable.Windows.JournalComponents;
 
 internal sealed class QuestJournalUtils
@@ -29,7 +17,9 @@ internal sealed class QuestJournalUtils
     AetheryteData aetheryteData,
     AetheryteFunctions aetheryteFunctions,
     MovementController movementController,
-    IGameGui gameGui)
+    IGameGui gameGui,
+    PathEditorWindow pathEditorWindow,
+    AutoGen.DraftQuestPathService draftQuestPathService)
 {
     public void ShowContextMenu(IQuestInfo questInfo, Quest? quest, string label)
     {
@@ -49,7 +39,8 @@ internal sealed class QuestJournalUtils
         if (!popup)
             return;
 
-        if (label != nameof(PriorityWindow))
+        bool inPriority = quest != null && questController.PriorityManager.Contains(quest);
+        if (label != nameof(PriorityWindow) || inPriority)
         {
             using (ImRaii.Disabled(disabled: true))
             {
@@ -58,18 +49,44 @@ internal sealed class QuestJournalUtils
 
             using (ImRaii.PushIndent())
             {
-                using (ImRaii.Disabled(quest == null))
+                if (label != nameof(PriorityWindow))
                 {
-                    if (ImGui.MenuItem(_L("Add to Priority Quests")) && quest != null)
-                        questController.PriorityManager.Add(quest.Id);
-                }
-                using (ImRaii.Disabled(prereqs.Count == 0 || quest == null))
-                {
-                    if (ImGui.MenuItem(_L("Add all to Priority Quests")) && quest != null)
+                    using (ImRaii.Disabled(quest == null))
                     {
-                        foreach (var qInfo in prereqs)
-                            questController.PriorityManager.Add(qInfo.QuestId);
-                        questController.PriorityManager.Add(quest.Id);
+                        if (ImGui.MenuItem(_L("Add to Priority Quests")) && quest != null)
+                            questController.PriorityManager.Add(quest.Id);
+
+                        if (ImGui.MenuItem(_L("Add to Priority Quests as Accept Only")) && quest != null)
+                            questController.PriorityManager.MarkAcceptOnly(quest.Id);
+                    }
+                    using (ImRaii.Disabled(prereqs.Count == 0 || quest == null))
+                    {
+                        if (ImGui.MenuItem(_L("Add all to Priority Quests")) && quest != null)
+                        {
+                            foreach (var qInfo in prereqs)
+                                questController.PriorityManager.Add(qInfo.QuestId);
+                            questController.PriorityManager.Add(quest.Id);
+                        }
+
+                        if (ImGui.MenuItem(_L("Add all to Priority Quests as Accept Only")) && quest != null)
+                        {
+                            foreach (var qInfo in prereqs)
+                                questController.PriorityManager.MarkAcceptOnly(qInfo.QuestId);
+                            questController.PriorityManager.MarkAcceptOnly(quest.Id);
+                        }
+                    }
+                }
+                else if (inPriority && quest != null)
+                {
+                    if (questController.PriorityManager.IsAcceptOnly(quest.Id))
+                    {
+                        if (ImGui.MenuItem(_L("Change to normal priority quest")))
+                            questController.PriorityManager.ClearAcceptOnly(quest.Id);
+                    }
+                    else
+                    {
+                        if (ImGui.MenuItem(_L("Change to accept only")))
+                            questController.PriorityManager.MarkAcceptOnly(quest.Id);
                     }
                 }
             }
@@ -148,8 +165,20 @@ internal sealed class QuestJournalUtils
 
         using (ImRaii.PushIndent())
         {
+            if (ImGui.MenuItem(_L("Open in Path Editor")))
+                pathEditorWindow.Open(questInfo.QuestId);
+
             if (ImGui.MenuItem(_L("Edit quest path")))
                 (bool success, string filename) = QuestRegistry.OpenEditor(questInfo);
+
+            // Only offered while the quest has no path at all; once the draft is written and the registry
+            // reloads, the quest is known and the entry disappears on its own.
+            if (draftQuestPathService.CanGenerateDrafts &&
+                ImGui.MenuItem(_L("Generate draft path")))
+            {
+                draftQuestPathService.GenerateDraft(questInfo);
+            }
+
             if (ImGui.MenuItem(_L("Sim quest")))
                 questController.SimulateQuest(questInfo, 0, 0);
         }
@@ -190,6 +219,24 @@ internal sealed class QuestJournalUtils
         {
             foreach (IQuestInfo quest in quests)
                 questController.PriorityManager.Remove(quest.QuestId);
+        }
+
+        // Queues every quest in the group to be accepted before any of them is completed. Unlike
+        // "Add all to Priority Quests" (which does each quest start-to-finish one at a time), this lets the
+        // user pick up several quests in a group (such as allied societies' dailies) at once,
+        // the completion/turn-ins only start once everything queued has been accepted from the priority queue.
+        // Does not auto-start questionable, that is up to the user.
+        if (ImGui.MenuItem(_L("Accept all quests")))
+        {
+            foreach (IQuestInfo quest in quests)
+            {
+                // Only queue quests we can actually accept right now. This skips ones already completed
+                // (e.g. today's daily is done) and ones already accepted (the normal rules complete those).
+                // FIXME: This probably could allow you to add upcoming quests to get auto-accepted too, or at least better understand why you can't accept them.
+                //        For example: if you have a lvl 90 quest and lvl 80 class, it says you are not ready, but you might have a lvl 100 class you could accept with.
+                if (questFunctions.IsReadyToAcceptQuest(quest.QuestId))
+                    questController.PriorityManager.MarkAcceptOnly(quest.QuestId);
+            }
         }
 
         if (ImGui.MenuItem(_L("Sim first quest")))

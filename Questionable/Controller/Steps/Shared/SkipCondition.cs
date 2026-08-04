@@ -1,18 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Plugin.Services;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Microsoft.Extensions.Logging;
-using Questionable.Controller.Utils;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.Functions;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Shared;
 
@@ -290,9 +281,12 @@ internal static class SkipCondition
 
             if (itemCount > 0 && skipConditions.Item is { NotInInventory: false })
             {
-                logger.LogInformation("Skipping step, item with itemId {ItemId} in inventory",
-                    step.ItemId.Value);
-                return true;
+                if (step.ItemCount != null && itemCount >= step.ItemCount)
+                {
+                    logger.LogInformation("Skipping step, item with itemId {ItemId} in inventory",
+                        step.ItemId.Value);
+                    return true;
+                }
             }
 
             return false;

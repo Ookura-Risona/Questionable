@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Questionable.Controller.Steps.Common;
-using Questionable.Domain;
-using Questionable.Functions;
+﻿using Questionable.Controller.Steps.Common;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Interactions;
 
@@ -28,7 +24,7 @@ internal static class Say
                     .GetString();
             ArgumentNullException.ThrowIfNull(excelString);
 
-            Mount.UnmountTask unmount = new();
+            MountStep.UnmountTask unmount = new();
             Task task = new(excelString);
             return [unmount, task];
         }
@@ -36,7 +32,7 @@ internal static class Say
 
     internal sealed record Task(string ChatMessage) : ITask
     {
-        public override string ToString() => $"说话({ChatMessage})";
+        public override string ToString() => $"Say({ChatMessage})";
     }
 
     internal sealed class UseChat(ChatFunctions chatFunctions) : AbstractDelayedTaskExecutor<Task>

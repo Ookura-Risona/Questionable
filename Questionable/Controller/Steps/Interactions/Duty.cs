@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
+﻿using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Questionable.Controller.Steps.Common;
 using Questionable.Controller.Steps.Shared;
-using Questionable.Controller.Utils;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.External;
-using Questionable.Functions;
-using Questionable.Gear;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
 using static Questionable.Controller.Steps.ITaskExecutor;
@@ -124,8 +115,8 @@ internal static class Duty
                 short currentItemLevel = gearStatsCalculator.CalculateAverageItemLevel(equippedItems);
                 if (cfcData.RequiredItemLevel > currentItemLevel)
                 {
-                    string errorText =  
-                        $"无法使用 AutoDuty 进入 {cfcData.Name}，所需装等：{cfcData.RequiredItemLevel}，当前装等：{currentItemLevel}。";
+                    string errorText =
+                        $"Could not use AutoDuty to queue for {cfcData.Name}, required item level: {cfcData.RequiredItemLevel}, current item level: {currentItemLevel}.";
                     if (!sendNotificationExecutor.Start(new SendNotification.Task(EInteractionType.Duty, errorText)))
                         chatGui.PrintError(errorText, CommandHandler.MessageTag, CommandHandler.TagColor);
 

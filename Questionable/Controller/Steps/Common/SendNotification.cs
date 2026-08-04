@@ -1,9 +1,5 @@
 ﻿using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Plugin.Services;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.External;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Common;
 
@@ -54,7 +50,7 @@ internal static class SendNotification
             {
                 EInteractionType.Duty => "Duty",
                 EInteractionType.SinglePlayerDuty => "Single player duty",
-                EInteractionType.Instruction or EInteractionType.WaitForManualProgress or EInteractionType.Snipe
+                EInteractionType.Instruction or EInteractionType.WaitForManualProgress
                     or EInteractionType.Fish =>
                     "Manual interaction required",
                 var _ => $"{Task.InteractionType}"

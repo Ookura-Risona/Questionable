@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Numerics;
+﻿using System.Runtime.CompilerServices;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
 using Questionable.Controller.Steps.Common;
-using Questionable.Controller.Utils;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.External;
-using Questionable.Functions;
 using Questionable.Model.Questing;
-using Questionable.Windows.Utils;
 namespace Questionable.Controller.Steps.Shared;
 
 // TODO: refactor — heavy nesting (27 lines indented ≥6 levels, max indent ~9 levels).
@@ -49,9 +38,9 @@ internal static class WaitAtEnd
                     WaitCondition.Task notInCombat = new(() => !condition[ConditionFlag.InCombat], "Wait(not in combat)");
                     return
                     [
-                        new WaitDelay(),
+                        new WaitDelay(TimeSpan.FromSeconds(1)),
                         notInCombat,
-                        new WaitDelay(),
+                        new WaitDelay(TimeSpan.FromSeconds(1)),
                         Next(quest, sequence)
                     ];
 
@@ -80,7 +69,7 @@ internal static class WaitAtEnd
                     return
                     [
                         new WaitObjectAtPosition(step.DataId.Value, step.Position.Value, step.NpcWaitDistance ?? 0.5f),
-                        new WaitDelay(),
+                        new WaitDelay(TimeSpan.FromSeconds(1)),
                         Next(quest, sequence)
                     ];
 
@@ -106,7 +95,7 @@ internal static class WaitAtEnd
                                 //   - waking sands' solar
                                 //   - rising stones' solar + dawn's respite
                                 return (lastPosition - currentPosition.Value).Length() > 2;
-                            }, $"Wait(tp away from {lastPosition.ToString("G", CultureInfo.InvariantCulture)})");
+                            }, $"Wait(tp away from {lastPosition.ToString("G5", CultureInfo.InvariantCulture)})");
                     }
 
                     return
@@ -119,7 +108,7 @@ internal static class WaitAtEnd
                 case EInteractionType.AcceptQuest:
                     {
                         WaitQuestAccepted accept = new(step.PickUpQuestId ?? quest.Id);
-                        WaitDelay delay = new();
+                        WaitDelay delay = new(TimeSpan.FromSeconds(1));
                         if (step.PickUpQuestId != null)
                         {
                             if (redoUtil.IsRedoActive()) // Can't accept other quests during NG+
@@ -133,7 +122,7 @@ internal static class WaitAtEnd
                 case EInteractionType.CompleteQuest:
                     {
                         WaitQuestCompleted complete = new(step.TurnInQuestId ?? quest.Id);
-                        WaitDelay delay = new();
+                        WaitDelay delay = new(TimeSpan.FromSeconds(1));
                         List<ITask> tasks = [complete, delay, .. RedeemRewardItems.CreateRedeemTasks(questData, dataManager)];
                         if (step.TurnInQuestId != null)
                             tasks.Add(Next(quest, sequence));
@@ -149,19 +138,22 @@ internal static class WaitAtEnd
         private static NextStep Next(Quest quest, QuestSequence sequence) => new(quest.Id, sequence.Sequence);
     }
 
-    internal sealed record WaitDelay(TimeSpan Delay, string? Message) : ITask
+    internal sealed record WaitDelay(TimeSpan Delay, string? Message,
+                   [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) : ITask
     {
-        public WaitDelay()
-            : this(TimeSpan.FromSeconds(1), Message: null)
+        public WaitDelay([CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            : this(TimeSpan.FromMilliseconds(750), Message: null, file: file, line: line)
         {
         }
-        public WaitDelay(TimeSpan Delay) : this(Delay, Message: null)
+        public WaitDelay(TimeSpan Delay, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            : this(Delay, Message: null, file: file, line: line)
         {
         }
 
         public bool ShouldRedoOnInterrupt() => true;
 
-        public override string ToString() => $"Wait(seconds: {Delay.TotalSeconds}{(Message != null ? $", message: {Message}" : "")})";
+        public override string ToString() =>
+            $"Wait(seconds: {Delay.TotalSeconds}{(Message != null ? $", message: {Message}" : "")}, {Path.GetFileNameWithoutExtension(file)}:L{line})";
     }
 
     internal sealed class WaitDelayExecutor : AbstractDelayedTaskExecutor<WaitDelay>
@@ -217,7 +209,7 @@ internal static class WaitAtEnd
         Vector3 Destination,
         float Distance) : ITask
     {
-        public override string ToString() => $"WaitObj({DataId} at {Destination.ToString("G", CultureInfo.InvariantCulture)} < {Distance})";
+        public override string ToString() => $"WaitObj({DataId} at {Destination.ToString("G5", CultureInfo.InvariantCulture)} < {Distance})";
     }
 
     internal sealed class WaitObjectAtPositionExecutor(GameFunctions gameFunctions) : TaskExecutor<WaitObjectAtPosition>

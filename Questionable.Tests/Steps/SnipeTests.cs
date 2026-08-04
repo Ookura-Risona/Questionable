@@ -1,3 +1,6 @@
+// Authored with LLM assistance, changes must be reviewed and owned by a human.
+// Initial version reviewed and owned by @Ookura-Risona
+
 using Questionable.Controller.Steps.Common;
 using Questionable.Controller.Steps.Interactions;
 using Questionable.Model.Questing;

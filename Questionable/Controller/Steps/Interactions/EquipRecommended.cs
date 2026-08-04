@@ -1,13 +1,8 @@
-﻿using System;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
-using ECommons.DalamudServices;
+﻿using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.Interop;
-using Questionable.Domain;
-using Questionable.External;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Interactions;
@@ -40,7 +35,7 @@ internal static class EquipRecommended
 
     internal sealed class EquipTask : ITask
     {
-        public override string ToString() => "装备（一键最强）";
+        public override string ToString() => "EquipRecommended";
     }
 
     internal sealed unsafe class DoEquipRecommended(IChatGui chatGui, ICondition condition, Configuration config, StylistIpc stylist)
@@ -86,9 +81,9 @@ internal static class EquipRecommended
                     {
                         if (!IsAllRecommendedGearEquipped())
                         {
-                            chatGui.Print("正在穿上推荐装备（一键最强）", CommandHandler.MessageTag, CommandHandler.TagColor);
+                            chatGui.Print("Equipping recommended gear.", CommandHandler.MessageTag, CommandHandler.TagColor);
                             recommendedEquipModule->EquipRecommendedGear();
-                            _continueAt = DateTime.Now.AddSeconds(1);
+                            _continueAt = DateTime.Now.AddSeconds(0.25);
                         }
 
                         _checkedOrTriggeredEquipmentUpdate = true;
@@ -105,7 +100,7 @@ internal static class EquipRecommended
                         {
                             stylist.UpdateGearset();
                             _checkedOrTriggeredEquipmentUpdate = true;
-                            _continueAt = DateTime.Now.AddSeconds(1);
+                            _continueAt = DateTime.Now.AddSeconds(0.25);
                             return ETaskResult.StillRunning;
                         }
                     }

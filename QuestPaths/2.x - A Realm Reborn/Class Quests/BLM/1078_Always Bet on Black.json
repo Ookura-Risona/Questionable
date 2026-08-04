@@ -1,7 +1,8 @@
-{
+﻿{
   "$schema": "https://qstxiv.github.io/schema/quest-v1.json",
   "Author": "pot0to",
   "Interruptible": false,
+  "LastChecked": {"Username": "erdelf", "Date": "2026-07-12"},
   "QuestSequence": [
     {
       "Sequence": 0,

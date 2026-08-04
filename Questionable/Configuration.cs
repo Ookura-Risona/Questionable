@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Dalamud.Configuration;
 using Dalamud.Game.Text;
-using ECommons.DalamudServices;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Newtonsoft.Json;
@@ -13,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
 using Questionable.Windows.Common;
-using static Questionable.Utils.LocalizeShortcut;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 namespace Questionable;
 
@@ -257,6 +253,7 @@ internal sealed class Configuration : IPluginConfiguration
         public Job GatheringJob { get; set; } = Job.MIN;
         public EGearsetUpdateSource GearsetUpdateSource { get; set; } = EGearsetUpdateSource.Vanilla;
         public bool HideInAllInstances { get; set; } = true;
+        public bool UseQuestionableTheme { get; set; } = true;
         public bool UseEscToCancelQuesting { get; set; } = true;
         public bool ShowIncompleteSeasonalEvents { get; set; } = true;
         public bool SkipLowPriorityDuties { get; set; }
@@ -275,6 +272,7 @@ internal sealed class Configuration : IPluginConfiguration
         public bool ConfigureDailyRoutines { get; set; } = true;
         public bool UsingDailyRoutinesTeleport { get; set; }
         public bool HideRemainingTasks { get; set; }
+        public bool ClaimMail { get; set; }
     }
 
     internal sealed class StopConfiguration
@@ -291,6 +289,7 @@ internal sealed class Configuration : IPluginConfiguration
         public int TargetLevel { get; set; } = 50;
         public bool RunCommandAfterStop { get; set; }
         public string CommandAfterStop { get; set; } = "/li auto";
+        public bool RemoveWhenCompleteConditionMet { get; set; }
     }
 
     internal sealed class DutyConfiguration
@@ -320,6 +319,8 @@ internal sealed class Configuration : IPluginConfiguration
         public XivChatType ChatType { get; set; } = XivChatType.Debug;
         public bool ShowTrayMessage { get; set; }
         public bool FlashTaskbar { get; set; }
+        public bool NotifyOnStopCondition { get; set; }
+        public bool NotifyOnCriticalFailure { get; set; } = true;
     }
 
     internal sealed class AdvancedConfiguration
@@ -350,6 +351,12 @@ internal sealed class Configuration : IPluginConfiguration
         public bool NamazuPreferCraft { get; set; }
         public bool Debug { get; set; }
         public bool DebugLocalisation { get; set; }
+
+        /// <summary>
+        ///     Gates the experimental questpath auto-generation (Journal Progress right-click). Generated paths
+        ///     are unreviewed machine drafts and must not be run unattended.
+        /// </summary>
+        public bool AllowPathGeneration { get; set; }
         public bool AutoRedeemRewardItems { get; set; }
         public HashSet<uint> AutoRedeemItemBlacklist { get; set; } = [];
     }

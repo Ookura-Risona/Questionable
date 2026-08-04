@@ -1,25 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
-using ECommons.DalamudServices;
 using ECommons.ExcelServices;
 using ECommons.ImGuiMethods;
 using Lumina.Excel.Sheets;
-using Questionable.Controller;
-using Questionable.Data;
-using Questionable.External;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
-using Questionable.Utils;
-using static Questionable.Utils.LocalizeShortcut;
+using Questionable.Windows.Common.Ui;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
-
 namespace Questionable.Windows.ConfigComponents;
 
 internal sealed class GeneralConfigComponent : ConfigComponent
@@ -102,6 +91,8 @@ internal sealed class GeneralConfigComponent : ConfigComponent
         using ImRaii.TabItemDisposable tab = ImRaii.TabItem(_L("General") + "###General");
         if (!tab)
             return;
+        var size = ImGui.GetWindowContentRegionMax();
+        using var _ = ImRaii.TextWrapPos(size.X);
         Dictionary<string, string> languages = new(StringComparer.Ordinal){
             { "en",    _L("English") },
             { "ja-jp", _L("Japanese") },
@@ -132,9 +123,10 @@ internal sealed class GeneralConfigComponent : ConfigComponent
                 DalamudInitializer.SetupI18N(Configuration.General.Language);
         }
 
-        if (ImGui.CollapsingHeader(_L("Preferences")))
+        if (QstWidgets.SectionHeader(_L("Preferences"), "Preferences", defaultOpen: false))
         {
             ECombatModule combatModule = Configuration.General.CombatModule;
+            ImGui.SetNextItemWidth(size.X / 2);
             if (ImGuiEx.EnumCombo(_L("Preferred Combat Module"), ref combatModule))
             {
                 Configuration.General.CombatModule = combatModule;
@@ -143,6 +135,7 @@ internal sealed class GeneralConfigComponent : ConfigComponent
 
             (uint[] mountIds, string[] mountNames) = _mounts.Value;
             uint mountId = Configuration.General.MountId;
+            ImGui.SetNextItemWidth(size.X / 2);
             if (ImGuiComponentsLocal.DrawSearchableCombo(_L("Preferred Mount"), mountIds, mountNames,
                 Configuration.General.MountId, ref _mountSearchString, ref mountId))
             {
@@ -151,6 +144,7 @@ internal sealed class GeneralConfigComponent : ConfigComponent
             }
 
             int grandCompany = (int)Configuration.General.GrandCompany;
+            ImGui.SetNextItemWidth(size.X / 2);
             if (ImGui.Combo(_L("Preferred Grand Company"), ref grandCompany, _grandCompanyNames,
                 _grandCompanyNames.Length))
             {
@@ -159,23 +153,28 @@ internal sealed class GeneralConfigComponent : ConfigComponent
             }
 
             (Job[] classJobIds, string[] classJobNames) = _classJobs.Value;
+            ImGui.SetNextItemWidth(size.X / 2);
             DrawComboOption(_L("Preferred Combat Job"), classJobIds, classJobNames,
                 () => Configuration.General.CombatJob,
                 v => Configuration.General.CombatJob = v);
 
             (Job[] craftJobIds, string[] craftJobNames) = _craftJobs.Value;
+            ImGui.SetNextItemWidth(size.X / 2);
             DrawComboOption(_L("Preferred Crafting Job"), craftJobIds, craftJobNames,
                 () => Configuration.General.CraftingJob,
                 v => Configuration.General.CraftingJob = v);
 
             (Job[] gatherJobIds, string[] gatherJobNames) = _gatherJobs.Value;
+            ImGui.SetNextItemWidth(size.X / 2);
             DrawComboOption(_L("Preferred Gathering Job"), gatherJobIds, gatherJobNames,
                 () => Configuration.General.GatheringJob,
                 v => Configuration.General.GatheringJob = v);
 
+            ImGui.BeginGroup();
             using (ImRaii.Disabled(!StylistIpc.IsInstalled))
             {
                 EGearsetUpdateSource gearsetSource = Configuration.General.GearsetUpdateSource;
+                ImGui.SetNextItemWidth(size.X / 2);
                 if (ImGuiEx.EnumCombo(_L("Preferred Gear Upgrade Source"), ref gearsetSource))
                 {
                     Configuration.General.GearsetUpdateSource = gearsetSource;
@@ -188,8 +187,12 @@ internal sealed class GeneralConfigComponent : ConfigComponent
                     Save();
                 }
             }
+            ImGui.EndGroup();
+            if (!StylistIpc.IsInstalled && ImGui.IsItemHovered())
+                ImGui.SetTooltip(_L("Stylist is not installed."));
 
             string chocoboName = Configuration.General.ChocoboName;
+            ImGui.SetNextItemWidth(size.X / 2);
             if (ImGui.InputText(_L("Chocobo name"), ref chocoboName, 20))
                 Configuration.General.ChocoboName = chocoboName;
 
@@ -210,6 +213,7 @@ internal sealed class GeneralConfigComponent : ConfigComponent
             }
 
             string displayName = Configuration.General.DisplayName;
+            ImGui.SetNextItemWidth(size.X / 2);
             if (ImGui.InputText(_L("Display name"), ref displayName, 20))
                 Configuration.General.DisplayName = displayName;
 
@@ -230,10 +234,25 @@ internal sealed class GeneralConfigComponent : ConfigComponent
             }
         }
 
-        if (ImGui.CollapsingHeader(_L("UI")))
+        if (QstWidgets.SectionHeader(_L("UI"), "UI", defaultOpen: false))
         {
             using (ImRaii.PushIndent())
             {
+                bool useQuestionableTheme = Configuration.General.UseQuestionableTheme;
+                if (ImGui.Checkbox(_L("Use Questionable theme"), ref useQuestionableTheme))
+                {
+                    Configuration.General.UseQuestionableTheme = useQuestionableTheme;
+                    Save();
+                }
+
+                if (ImGui.IsItemHovered())
+                {
+                    using (ImRaii.Tooltip())
+                    {
+                        ImGui.Text(_L("When disabled, Questionable's windows use your Dalamud style/theme instead."));
+                    }
+                }
+
                 bool hideInAllInstances = Configuration.General.HideInAllInstances;
                 if (ImGui.Checkbox(_L("Hide quest window in all instanced duties"), ref hideInAllInstances))
                 {
@@ -303,7 +322,7 @@ internal sealed class GeneralConfigComponent : ConfigComponent
         }
 #endif
 
-        if (ImGui.CollapsingHeader(_L("Questing")))
+        if (QstWidgets.SectionHeader(_L("Questing"), "Questing", defaultOpen: false))
         {
             using (ImRaii.PushIndent())
             {
@@ -384,6 +403,21 @@ internal sealed class GeneralConfigComponent : ConfigComponent
                         ImGui.Text(_L("Ideally this should be set in the in-game Teleport settings, but is provided here for convenience."));
                     }
                 }
+
+                //bool claimMail = Configuration.General.ClaimMail;
+                //if (ImGui.Checkbox(_L("Claim mail"), ref claimMail))
+                //{
+                //    Configuration.General.ClaimMail = claimMail;
+                //    Save();
+                //}
+
+                //if (ImGui.IsItemHovered())
+                //{
+                //    using (ImRaii.Tooltip())
+                //    {
+                //        ImGui.Text(_L("Use MogMail to claim all letters from Delivery Moogles when accepting a quest"));
+                //    }
+                //}
 
 #if false
             ImGui.Spacing();

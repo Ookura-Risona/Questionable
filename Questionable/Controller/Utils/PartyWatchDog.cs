@@ -1,9 +1,6 @@
-using System;
-using Dalamud.Plugin.Services;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
-using Microsoft.Extensions.Logging;
 namespace Questionable.Controller.Utils;
 
 internal sealed class PartyWatchDog : IDisposable
@@ -96,7 +93,7 @@ internal sealed class PartyWatchDog : IDisposable
         if (_questController.IsRunning || _questController.AutomationType != QuestController.EAutomationType.Manual)
         {
             _chatGui.PrintError(
-                $"Questionable 正在停止: {reason}. 如果你认为这是不正常的，请手动重启 Questionable.",
+                $"Stopping Questionable: {reason}. If you believe this to be correct, please restart Questionable manually.",
                 CommandHandler.MessageTag, CommandHandler.TagColor);
             _questController.Stop(reason);
         }

@@ -6,7 +6,7 @@ internal sealed class WaitNavmesh
 {
     internal sealed record Task : ITask
     {
-        public override string ToString() => "等待(navmesh 就绪)";
+        public override string ToString() => "Wait(navmesh)";
     }
 
     internal sealed class Executor(MovementController movementController) : TaskExecutor<Task>, IDebugStateProvider

@@ -31,6 +31,7 @@ public sealed class RendererPlugin : IDalamudPlugin
 
     private readonly EditorCommands _editorCommands;
     private readonly EditorWindow _editorWindow;
+    private readonly Configuration _configuration;
 
     private readonly IObjectTable _objectTable;
 
@@ -66,6 +67,7 @@ public sealed class RendererPlugin : IDalamudPlugin
         { IsOpen = true };
         _windowSystem.AddWindow(configWindow);
         _windowSystem.AddWindow(_editorWindow);
+        _configuration = configuration;
 
         _ = framework.RunOnFrameworkThread(() =>
         {
@@ -86,8 +88,14 @@ public sealed class RendererPlugin : IDalamudPlugin
         _clientState.ClassJobChanged += ClassJobChanged;
     }
 
-    internal List<GatheringLocationContext> GatheringLocations { get; } =
-        [];
+    private volatile List<GatheringLocationContext> _gatheringLocations = [];
+    internal List<GatheringLocationContext> GatheringLocations
+    {
+        get
+        {
+            return _gatheringLocations;
+        }
+    }
 
     internal IDictionary<uint, List<Vector3>> GBRLocationData { get; }
 
@@ -129,23 +137,23 @@ public sealed class RendererPlugin : IDalamudPlugin
 
     private void LoadGatheringLocationsFromDirectory()
     {
-        GatheringLocations.Clear();
+        List<GatheringLocationContext> next = [];
 
         try
         {
             foreach (string expansionFolder in ExpansionData.ExpansionFolders.Values)
-                LoadFromDirectory(
-                    new(Path.Combine(PathsDirectory.FullName, expansionFolder)));
+                LoadFromDirectory(next, new(Path.Combine(PathsDirectory.FullName, expansionFolder)));
             _pluginLog.Information(
-                $"Loaded {GatheringLocations.Count} gathering root locations from project directory");
+                $"Loaded {next.Count} gathering root locations from project directory");
         }
         catch (Exception e)
         {
             _pluginLog.Error(e, "Failed to load paths from project directory");
         }
+        _gatheringLocations = next;
     }
 
-    private void LoadFromDirectory(DirectoryInfo directory)
+    private static void LoadFromDirectory(List<GatheringLocationContext> next, DirectoryInfo directory)
     {
         if (!directory.Exists)
             return;
@@ -156,7 +164,7 @@ public sealed class RendererPlugin : IDalamudPlugin
             try
             {
                 using FileStream stream = new(fileInfo.FullName, FileMode.Open, FileAccess.Read);
-                LoadLocationFromStream(fileInfo, stream);
+                LoadLocationFromStream(next, fileInfo, stream);
             }
             catch (Exception e)
             {
@@ -165,14 +173,14 @@ public sealed class RendererPlugin : IDalamudPlugin
         }
 
         foreach (DirectoryInfo childDirectory in directory.GetDirectories())
-            LoadFromDirectory(childDirectory);
+            LoadFromDirectory(next, childDirectory);
     }
 
-    private void LoadLocationFromStream(FileInfo fileInfo, Stream stream)
+    private static void LoadLocationFromStream(List<GatheringLocationContext> next, FileInfo fileInfo, Stream stream)
     {
         JsonNode locationNode = JsonNode.Parse(stream)!;
         GatheringRoot root = locationNode.Deserialize<GatheringRoot>()!;
-        GatheringLocations.Add(new(fileInfo, ushort.Parse(fileInfo.Name.Split('_')[0], CultureInfo.InvariantCulture),
+        next.Add(new(fileInfo, ushort.Parse(fileInfo.Name.Split('_')[0], CultureInfo.InvariantCulture),
             root));
     }
 
@@ -212,7 +220,7 @@ public sealed class RendererPlugin : IDalamudPlugin
     }
 
     internal IEnumerable<GatheringLocationContext> GetLocationsInTerritory(uint territoryId)
-        => GatheringLocations.Where(x => x.Root.Steps.LastOrDefault()?.TerritoryId == territoryId);
+        => _gatheringLocations.Where(x => x.Root.Steps.LastOrDefault()?.TerritoryId == territoryId);
 
     internal void Save(FileInfo targetFile, GatheringRoot root)
     {
@@ -263,7 +271,7 @@ public sealed class RendererPlugin : IDalamudPlugin
 
     private void Draw()
     {
-        if (_currentClassJob is not (Job.MIN or Job.BTN))
+        if (_currentClassJob is not (Job.MIN or Job.BTN) || !_editorWindow.IsOpen)
             return;
 
         using PctDrawList? drawList = PctService.Draw();
@@ -328,7 +336,8 @@ public sealed class RendererPlugin : IDalamudPlugin
                             locationOverride?.MaximumDistance ?? x.CalculateMaximumDistance(),
                             minimumAngle, maximumAngle, color | 0xFF000000);
 
-                        drawList.AddText(x.Position, isUnsaved ? 0xFFFF0000 : 0xFFFFFFFF, $"{location.Root.Groups.IndexOf(group)} // {node.DataId} / {node.Locations.IndexOf(x)} || {minimumAngle}, {maximumAngle}");
+                        if (_configuration.ShowOverlay)
+                            drawList.AddText(x.Position, isUnsaved ? 0xFFFF0000 : 0xFFFFFFFF, $"{location.Root.Groups.IndexOf(group)} // {node.DataId} / {node.Locations.IndexOf(x)} || {minimumAngle}, {maximumAngle}");
 #if false
                         var a = GatheringMath.CalculateLandingLocation(x, 0, 0);
                         var b = GatheringMath.CalculateLandingLocation(x, 1, 1);

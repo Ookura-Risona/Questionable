@@ -17,10 +17,17 @@ internal sealed class AboutConfigComponent : ConfigComponent
         using var tab = ImRaii.TabItem("关于###About");
         if (!tab)
             return;
-        
+
+        DrawContent();
+    }
+
+    public static void DrawContent()
+    {
+        ImGui.Separator();
+        ImGui.Spacing();
         ImGui.TextColored(ImGuiColors.DalamudRed, "本汉化插件完全开源免费，从未委托任何人在任何渠道售卖。");
         ImGui.TextColored(ImGuiColors.DalamudRed, "如果你是付费购买的本汉化插件，请立即退款并差评举报。");
-        
+
         // plugin origin author
         ImGui.Text("插件作者：");
         ImGui.SameLine();
@@ -43,6 +50,5 @@ internal sealed class AboutConfigComponent : ConfigComponent
         {
             Util.OpenLink("https://github.com/Ookura-Risona/DalamudPlugins");
         }
-
     }
 }

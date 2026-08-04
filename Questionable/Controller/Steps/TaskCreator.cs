@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dalamud.Plugin.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Questionable.Controller.Steps.Interactions;
+﻿using Questionable.Controller.Steps.Interactions;
 using Questionable.Controller.Steps.Shared;
-using Questionable.Data;
-using Questionable.Domain;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps;
 
@@ -48,7 +40,7 @@ internal sealed class TaskCreator
                 !prevSequence.Steps.Any(_step => _step is { InteractionType: EInteractionType.Duty or EInteractionType.SinglePlayerDuty }))
             {
                 _chatGui.PrintError(
-                    $"任务 '{quest.Info.Name}' ({quest.Id}) 的路径中没有找到序列 {sequenceNumber}，请在此报告问题：https://github.com/PunishXIV/Questionable/discussions/20",
+                    $"Path for quest '{quest.Info.Name}' ({quest.Id}) does not contain sequence {sequenceNumber}, please report this: https://github.com/PunishXIV/Questionable/discussions/20",
                     CommandHandler.MessageTag, CommandHandler.TagColor);
             }
 
@@ -107,10 +99,8 @@ internal sealed class TaskCreator
                 .Cast<WaitAtEnd.WaitForTerritory>()
                 .FirstOrDefault();
             if (waitForTerritory != null &&
-                _clientState.TerritoryType == waitForTerritory.TerritoryId &&
-                waitForTerritory is not { TerritoryId: 212 or 351 })
+                _clientState.TerritoryType == waitForTerritory.TerritoryId)
             {
-                // if we're at the territory we're meant to be in, (unless it's waking sands or rising stones), can probably move to the next step
                 int index = newTasks.IndexOf(waitForTerritory);
                 _logger.LogWarning(
                         "Skipping {SkippedTaskCount} out of {TotalCount} tasks, we are already in TargetTerritoryId:{TerritoryId}",

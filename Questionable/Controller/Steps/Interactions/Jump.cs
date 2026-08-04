@@ -1,9 +1,5 @@
-﻿using System;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
+﻿using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Microsoft.Extensions.Logging;
-using Questionable.Domain;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Interactions;
@@ -39,7 +35,7 @@ internal static class Jump
         JumpDestination JumpDestination,
         string? Comment) : IJumpTask
     {
-        public override string ToString() => $"跳跃({Comment})";
+        public override string ToString() => $"Jump({Comment})";
     }
 
     internal abstract class JumpBase<T>

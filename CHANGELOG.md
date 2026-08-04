@@ -1,2 +1,1 @@
-- Feature: "hide remaining tasks" config -alydev
-- Change: General tab in config has collapsible headers now -alydev
+- Bug fix maybe: increased default delay from .25 seconds back up to .75 seconds -alydev

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Plugin.Services;
+﻿using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
-using Microsoft.Extensions.Logging;
-using Questionable.Data;
-using Questionable.Functions;
 using Questionable.Model.Questing;
 using Quest = Questionable.Domain.Quest;
 
@@ -30,7 +23,7 @@ internal static class EquipItem
 
     internal sealed record Task(uint ItemId) : ITask
     {
-        public override string ToString() => $"装备({ItemId})";
+        public override string ToString() => $"Equip({ItemId})";
     }
 
     internal sealed class DoEquip

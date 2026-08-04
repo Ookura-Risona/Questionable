@@ -1,15 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
-using Microsoft.Extensions.Logging;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Questionable.Controller.Steps.Common;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.External;
-using Questionable.Functions;
 using Questionable.Model.Common;
 using Questionable.Model.Common.Converter;
 using Questionable.Model.Questing;
@@ -124,6 +114,11 @@ internal static class AethernetShortcut
                     logger.LogInformation("Skipping aethernet shortcut because the target aetheryte is unlocked");
                     return false;
                 }
+                if (Task.SkipConditions.InTerritory.Contains(clientState.TerritoryType))
+                {
+                    logger.LogInformation("Skipping aethernet teleport due to SkipCondition (InTerritory)");
+                    return false;
+                }
             }
 
             if (aetheryteFunctions.IsAetheryteUnlocked(Task.From) &&
@@ -183,6 +178,16 @@ internal static class AethernetShortcut
                             return true;
                         }
                     }
+                    if (Task.To is EAetheryteLocation.UldahAirship && territoryType == 130 && playerPosition.Y > 80)
+                    {
+                        logger.LogInformation("Skipping aethernet teleport, already in Uldah airship landing");
+                        return false;
+                    }
+                    if (Task.To is EAetheryteLocation.LimsaAirship && territoryType == 128 && playerPosition.Y > 90)
+                    {
+                        logger.LogInformation("Skipping aethernet teleport, already in Limsa airship landing");
+                        return false;
+                    }
 
                     MoveTo();
                     return true;
@@ -223,11 +228,18 @@ internal static class AethernetShortcut
 
         private void DoTeleport()
         {
-            logger.LogInformation("Using lifestream to teleport to {Destination}", Task.To);
-            if (configuration.General.UsingDailyRoutinesTeleport && dailyRoutinesIpc.IsDailyRoutinesEnabled)
-                dailyRoutinesIpc.Teleport(Task.To);
+            if (configuration.General.UsingDailyRoutinesTeleport &&
+                dailyRoutinesIpc.IsDailyRoutinesEnabled &&
+                dailyRoutinesIpc.Teleport(Task.To))
+            {
+                logger.LogInformation("Using DailyRoutines to teleport to {Destination}", Task.To);
+            }
             else
+            {
+                logger.LogInformation("Using lifestream to teleport to {Destination}", Task.To);
                 lifestreamIpc.Teleport(Task.To);
+            }
+
             _teleported = true;
         }
 

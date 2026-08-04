@@ -1,24 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Plugin.Services;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using Microsoft.Extensions.Logging;
 using Questionable.Controller.Steps.Shared;
-using Questionable.Controller.Utils;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.Functions;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
-using Questionable.Windows.Utils;
 using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
 namespace Questionable.Controller.Steps.Interactions;
@@ -41,7 +30,8 @@ internal static class Interact
                     // Can't accept other quests during NG+
                     yield break;
                 }
-                if (step.InteractionType is EInteractionType.CompleteQuest)
+                if (step.InteractionType is EInteractionType.CompleteQuest ||
+                    (step.InteractionType is EInteractionType.AcceptQuest && quest.GetQuestInfo().CompletesInstantly)) // instant quest
                 {
                     yield return new LogQuestCompletion.Task(quest);
                     if (configuration.Advanced.PreventQuestCompletion)
@@ -126,6 +116,7 @@ internal static class Interact
         Configuration configuration,
         ICondition condition,
         IObjectTable objectTable,
+        ClassJobUtils classJobUtils,
         ILogger<DoInteract> logger)
         : TaskExecutor<Task>, IConditionChangeAware
     {
@@ -134,6 +125,7 @@ internal static class Interact
         private bool _needsFacing;
         private bool _needsUnmount;
         private bool _reportedGameObjNull;
+        private ushort _unequipItem;
 
         /// <summary>
         ///     A slight delay when we think an interaction has ended, to make sure that we're processing "Action cancelled"
@@ -149,6 +141,31 @@ internal static class Interact
             if (DateTime.Now <= _continueAt)
                 return ETaskResult.StillRunning;
 
+            if (_unequipItem != 0)
+            {
+                logger.LogDebug($"unequipping item {_unequipItem}");
+                unsafe
+                {
+                    InventoryManager* inventoryManager = InventoryManager.Instance();
+                    var armoryType = InventoryType.ArmorySoulCrystal;
+                    ushort srcSlot = 13;
+                    InventoryContainer* armoryContainer = inventoryManager->GetInventoryContainer(armoryType);
+                    if (UnequipItem.DoUnequip.TryFindFirstEmptySlot(armoryContainer, out ushort targetSlot))
+                    {
+                        logger.LogDebug($"Moving {_unequipItem} to {targetSlot} in soul crystal inv");
+                        _ = inventoryManager->MoveItemSlot(InventoryType.EquippedItems, srcSlot, armoryType, targetSlot, a6: true);
+                        //if (result != 0)
+                        //    throw new Exception($"UnequipItem failed to move {_unequipItem} to {targetSlot} in soul crystal inv");
+                    }
+                    else
+                    {
+                        logger.LogWarning("Armory container {ArmoryType} is full, cannot unequip item {ItemId}",
+                            armoryType, _unequipItem);
+                        throw new Exception("Unable to unequip gear - armory chest is full.");
+                    }
+                }
+                _unequipItem = 0;
+            }
             if (_needsUnmount)
             {
                 if (condition[ConditionFlag.Mounted])
@@ -234,68 +251,73 @@ internal static class Interact
             {
                 List<Job> acceptableJobs = [.. Task.Quest.Info.ClassJobs];
                 Job playerJob = (Job)player.ClassJob.Value.RowId;
+                Job targetJob = acceptableJobs[0];
+                logger.LogDebug($"{Task.Quest.Id} acceptableJobs: {string.Join(',', acceptableJobs.Select(j => j.ToString()))}");
                 if (acceptableJobs.Count >= 1 && !acceptableJobs.Contains(playerJob))
                 {
                     if (!acceptableJobs[0].IsCrafter() && !acceptableJobs[0].IsGatherer())
-                        acceptableJobs = [.. acceptableJobs.Prepend(configuration.General.CombatJob)];
-                    else if (acceptableJobs[0].IsCrafter())
                     {
-                        if (acceptableJobs.Contains(configuration.General.CraftingJob))
-                            acceptableJobs = [.. acceptableJobs.Prepend(configuration.General.CraftingJob)];
+                        targetJob = classJobUtils.LookupConfiguredJob(EExtendedClassJob.ConfiguredCombatJob);
+                        if (acceptableJobs.Contains(targetJob))
+                            acceptableJobs = [.. acceptableJobs.Prepend(targetJob)];
+                        else
+                            logger.LogInformation("Normal quest, but configured job {CombatJob} is not valid for {QuestId}, changing to {AcceptableJob}",
+                                targetJob, Task.Quest.Id, acceptableJobs[0]);
+                    }
+                    if (acceptableJobs[0].IsCrafter())
+                    {
+                        targetJob = classJobUtils.LookupConfiguredJob(EExtendedClassJob.ConfiguredCraftingJob);
+                        if (acceptableJobs.Contains(targetJob))
+                            acceptableJobs = [.. acceptableJobs.Prepend(targetJob)];
                         else
                             logger.LogInformation("Crafting quest, but configured job {CraftingJob} is not valid for {QuestId}, changing to {AcceptableJob}",
-                                configuration.General.CraftingJob, Task.Quest.Id, acceptableJobs[0]);
+                                targetJob, Task.Quest.Id, acceptableJobs[0]);
                     }
                     else if (acceptableJobs[0].IsGatherer())
                     {
-                        if (acceptableJobs.Contains(configuration.General.GatheringJob))
-                            acceptableJobs = [.. acceptableJobs.Prepend(configuration.General.GatheringJob)];
+                        targetJob = classJobUtils.LookupConfiguredJob(EExtendedClassJob.ConfiguredGatheringJob);
+                        if (acceptableJobs.Contains(targetJob))
+                            acceptableJobs = [.. acceptableJobs.Prepend(targetJob)];
                         else
                             logger.LogInformation("Gathering quest, but configured job {GatheringJob} is not valid for {QuestId}, changing to {AcceptableJob}",
-                                configuration.General.GatheringJob, Task.Quest.Id, acceptableJobs[0]);
+                                targetJob, Task.Quest.Id, acceptableJobs[0]);
                     }
                     if (Task.Quest.Info.AlliedSociety.Equals(EAlliedSociety.Namazu))
                     {
                         if (configuration.Advanced.NamazuPreferCraft && !acceptableJobs[0].IsCrafter())
-                            acceptableJobs = [.. acceptableJobs.Prepend(configuration.General.CraftingJob)];
+                            acceptableJobs = [.. acceptableJobs.Prepend(targetJob)];
                         else if (!configuration.Advanced.NamazuPreferCraft && !acceptableJobs[0].IsGatherer())
-                            acceptableJobs = [.. acceptableJobs.Prepend(configuration.General.GatheringJob)];
+                            acceptableJobs = [.. acceptableJobs.Prepend(targetJob)];
                     }
-
-                    logger.LogInformation("Current ClassJob {PlayerJob} not valid for {QuestId}, attempting to switch", playerJob, Task.Quest.Id);
-                    unsafe
+                    targetJob = acceptableJobs[0];
+                    if (classJobUtils.ClassToJobStone(targetJob) is (Job job, ushort item))
                     {
-                        bool changed = false;
-                        RaptureGearsetModule* gearsetModule = RaptureGearsetModule.Instance();
-                        if (gearsetModule != null)
-                        {
-                            for (int i = 0; i < 100; ++i)
-                            {
-                                RaptureGearsetModule.GearsetEntry* gearset = gearsetModule->GetGearset(i);
-                                if (gearset == null)
-                                    continue;
-                                if (acceptableJobs[0].Equals((Job)gearset->ClassJob))
-                                {
-                                    gearsetModule->EquipGearset(gearset->Id);
-                                    changed = true;
-                                }
-                            }
-                        }
-
-                        if (!changed)
-                        {
-                            throw new Exception($"Quest {Task.Quest.Info.Name} requires a job like {acceptableJobs[0]}, " +
-                                               "but you do not have a valid job configured in QST Settings.");
-                        }
+                        _unequipItem = item;
+                        logger.LogInformation("Current job {ClassJob} is not valid for {QuestId}, changing to {AcceptableJob} via {MiddleJob}",
+                            playerJob, Task.Quest.Id, targetJob, job);
+                        targetJob = job;
                     }
+
+                    if (!classJobUtils.SwitchClassJob(targetJob))
+                    {
+                        throw new Exception($"Quest {Task.Quest.Info.Name} requires a job like {targetJob}, " +
+                                           "but you do not have a gearset for this job or have not configured QST job preferences.");
+                    }
+                    logger.LogInformation($"Switched from {playerJob} to {targetJob}");
 
                     _continueAt = DateTime.Now.AddSeconds(0.2);
                     return ETaskResult.StillRunning;
                 }
             }
 
-            if (!gameObject.IsTargetable || !HasAnyMarker(gameObject))
+            bool isTargetable = gameObject.IsTargetable;
+            bool hasAnyMarker = HasAnyMarker(gameObject);
+            if (!isTargetable || !hasAnyMarker)
+            {
+                if (EzThrottler.Throttle("skipTarget", miliseconds: 1000))
+                    logger.LogDebug($"IsTargetable: {isTargetable} / HasAnyMarker: {hasAnyMarker}");
                 return ETaskResult.StillRunning;
+            }
 
             TriggerInteraction(gameObject);
             return ETaskResult.StillRunning;

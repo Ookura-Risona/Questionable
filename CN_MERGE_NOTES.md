@@ -89,11 +89,16 @@
 
 - `Questionable/Tweak/AutoSnipeHandler.cs`
 - `Questionable/QuestionablePlugin.cs`
+- `Questionable/Controller/Steps/Interactions/Interact.cs`
+- `Questionable/Controller/Steps/Common/SendNotification.cs`
+- `Questionable.Tests/Steps/SnipeTests.cs`
 
 保留内容：
 
 - 在 Questionable 运行时自动处理狙击小游戏，减少对 Automaton/CBT AutoSnipe 的依赖。
 - `Snipe` 必须始终进入 Questionable 的交互任务；不得因为 Automaton 未安装或其 AutoSnipe 开关关闭而提前跳过或生成手动等待通知。
+- Automaton/CBT 可以继续出现在可选兼容插件列表中，但不得把其 AutoSnipe 开关显示为狙击任务的必需条件。
+- 保留狙击任务进入交互队列且不创建手动通知的回归测试。
 - 签名 hook 更新后必须实际测试；如果上游未来提供等价内置实现，可改用上游实现。
 
 ### 默认关闭上游问题上报
@@ -117,13 +122,13 @@
 
 - `Questionable/Windows/ConfigComponents/AboutConfigComponent.cs`
 - `Questionable/Windows/ConfigWindow.cs`
-- `Questionable/QuestionablePlugin.cs`
 
 保留内容：
 
 - 汉化版免费声明。
 - 原作者和汉化作者信息。
 - 汉化分支 issue 与插件源入口。
+- 当前实现将汉化信息绘制在上游新版 About 标签内容之后，不要恢复成嵌套 TabItem。
 
 ## 可酌情保留
 

@@ -1,10 +1,4 @@
-﻿using System;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Plugin.Services;
-using Microsoft.Extensions.Logging;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.Functions;
+﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Interactions;
 
@@ -27,7 +21,7 @@ internal static class AetherCurrent
             if (!aetherCurrentData.IsValidAetherCurrent(step.TerritoryId, step.AetherCurrentId.Value))
             {
                 chatGui.PrintError(
-                    $"ID 为 {step.AetherCurrentId} 的以太水晶位置无效，已跳过共鸣步骤",  
+                    $"Aether current with id {step.AetherCurrentId} is referencing an invalid aether current, will skip attunement",
                     CommandHandler.MessageTag, CommandHandler.TagColor);
                 return null;
             }
@@ -39,7 +33,7 @@ internal static class AetherCurrent
     internal sealed record Attune(uint DataId, uint AetherCurrentId) : ITask
     {
         public bool ShouldRedoOnInterrupt() => true;
-        public override string ToString() => $"共鸣({AetherCurrentId})";
+        public override string ToString() => $"AttuneAetherCurrent({AetherCurrentId})";
     }
 
     internal sealed class DoAttune

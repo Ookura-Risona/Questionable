@@ -1,11 +1,5 @@
-using System.Collections.Generic;
-using System.Numerics;
-using Dalamud.Plugin.Services;
-using Microsoft.Extensions.Logging;
-using Questionable.Controller.Steps.Common;
+﻿using Questionable.Controller.Steps.Common;
 using Questionable.Controller.Steps.Shared;
-using Questionable.Data;
-using Questionable.Domain;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
 namespace Questionable.Controller.Steps.Movement;
@@ -59,7 +53,7 @@ internal static class MoveTo
                     var fromTerritory = aetheryteData.TerritoryIds[step.AethernetShortcut.From];
                     var toTerritory = aetheryteData.TerritoryIds[step.AethernetShortcut.To];
                     yield return new WaitCondition.Task(() => clientState.TerritoryType == fromTerritory || clientState.TerritoryType == toTerritory,
-                    $"Wait(territori: {TerritoryData.GetNameAndId(fromTerritory)}|{TerritoryData.GetNameAndId(toTerritory)})");
+                    $"Wait(territori: {TerritoryData.GetNameAndId(fromTerritory)}|{(fromTerritory != toTerritory ? TerritoryData.GetNameAndId(toTerritory) : '*')})");
                     yield return new Shared.AethernetShortcut.Task(step.AethernetShortcut.From, step.AethernetShortcut.To);
                 }
             }

@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Dalamud.Plugin.Services;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.Sheets;
-using Questionable.Domain;
 using Questionable.Model.Common;
 using Questionable.Model.Questing;
-using static Questionable.Utils.LocalizeShortcut;
 using Quest = Lumina.Excel.Sheets.Quest;
 
 namespace Questionable.Data;
@@ -65,6 +59,18 @@ internal sealed class QuestData
                 { 1192, [5174, 5176, 5178, 5179] }
             }
             .ToImmutableDictionary(x => x.Key, x => x.Value.Select(y => new QuestId(y)).ToImmutableList());
+    public static readonly IReadOnlyList<ElementId> DeliveryMoogleQuests = (
+        (ushort[])[
+            // postmoogle quests
+            1481, 1483, 1482, 1484, 1531, 1532, 1533, 1485, 33, 1571, 36, 1573, 1570, 1576, 1577, 241, 242, 1574, 1572, 1575, 243, 244, 240, 496, 362,
+            // prereqs
+            // fungal frolic chain
+            804, 805, 807,
+            // aesthetician
+            1210,
+            // hildibrand 1 (picks up following quest, may not be ideal)
+            1204
+        ]).FromNumericListOfQuests();
 
     private static readonly IReadOnlyList<uint> TankRoleQuestChapters = [136, 154, 178];
     private static readonly IReadOnlyList<uint> HealerRoleQuestChapters = [137, 155, 179];
@@ -151,6 +157,9 @@ internal sealed class QuestData
 
         // white wolf gate
         AddPreviousQuest(new(803), new(802));
+
+        // unlocking LB to use material supplier for craft mats
+        //AddPreviousQuest(new(142), new(1212));
 
         // "In order to undertake this quest" [...]
         const int mountaintopDiplomacy = 1619;
@@ -444,14 +453,12 @@ internal sealed class QuestData
 
     public List<QuestId> GetLockedClassQuests()
     {
-        Job startingClass;
+        Job startingClass = Job.ADV;
         unsafe
         {
             PlayerState* playerState = PlayerState.Instance();
             if (playerState != null)
                 startingClass = (Job)playerState->FirstClass;
-            else
-                startingClass = Job.ADV;
         }
 
         if (startingClass == Job.ADV)

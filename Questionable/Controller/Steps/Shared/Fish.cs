@@ -1,17 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
-using Dalamud.Plugin.Services;
 using ECommons.ExcelServices;
-using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Microsoft.Extensions.Logging;
 using Questionable.Controller.Steps.Common;
 using Questionable.Controller.Steps.Fishing;
-using Questionable.Controller.Utils;
-using Questionable.Data;
-using Questionable.Domain;
-using Questionable.External;
-using Questionable.Functions;
 using Questionable.Model.Questing;
 using static Questionable.Controller.Steps.ITaskExecutor;
 
@@ -29,7 +19,7 @@ internal static class Fish
             if (!autoHookIpc.IsAvailable())
                 yield break;
 
-            yield return new Mount.UnmountTask();
+            yield return new MountStep.UnmountTask();
             yield return new SwitchClassJob.Task(Job.FSH);
 
             // Ensure we have at least one fish task. Quests that need key items (e.g. And Thanks for All the Fish) do not have itemIds and so will have no requested items.
@@ -104,10 +94,15 @@ internal static class Fish
 
                 if (!FishingData.FishingPresets.TryGetValue((QuestId)Task.Quest.Id, out string? presetExport))
                 {
-                    logger.LogDebug("No fishing preset found for quest {QuestId}. Autocreating from quest data.", Task.Quest.Id);
+                    if (Task.GatheredItem?.FishingOptions?.Preset != null)
+                        presetExport = Task.GatheredItem?.FishingOptions?.Preset!;
+                    else
+                    {
+                        logger.LogDebug("No fishing preset found for quest {QuestId}. Autocreating from quest data.", Task.Quest.Id);
 
-                    presetExport = fishingPresetGenerator.CreatePresetFromTask(Task);
-                    logger.LogDebug(presetExport);
+                        presetExport = fishingPresetGenerator.CreatePresetFromTask(Task);
+                        logger.LogDebug(presetExport);
+                    }
                 }
 
                 // Using an anonymouse preset allows us to easily remove it later.

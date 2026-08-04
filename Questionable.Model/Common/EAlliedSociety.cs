@@ -1,4 +1,4 @@
-using Questionable.Model.Common.Converter;
+﻿using Questionable.Model.Common.Converter;
 namespace Questionable.Model.Common;
 
 public enum EAlliedSociety : byte
