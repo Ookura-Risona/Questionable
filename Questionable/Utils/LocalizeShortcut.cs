@@ -41,10 +41,14 @@ internal static class LocalizeShortcut
 
         string value = _dataManager.GetExcelSheet<T>(_clientState.ClientLanguage).GetRow(rowId) switch
         {
-            JournalGenre g => g.Name.ToMacroString(),
-            JournalCategory c => c.Name.ToMacroString(),
-            Addon a => a.Text.ToMacroString(),
-            ExVersion v => v.Name.ToMacroString(),
+            JournalGenre journalGenre => journalGenre.Name.ToMacroString(),
+            JournalCategory journalCategory => journalCategory.Name.ToMacroString(),
+            Addon addon => addon.Text.ToMacroString(),
+            ExVersion exVersion => exVersion.Name.ToMacroString(),
+            BannerBg bannerBg => bannerBg.Name.ToMacroString(),
+            BeastTribe beastTribe => beastTribe.Name.ToMacroString(),
+            AchievementCategory achievementCategory => achievementCategory.Name.ToMacroString(),
+            CabinetSubCategory cabinetSubCategory => cabinetSubCategory.Name.ToMacroString(),
             _ => throw new InvalidOperationException($"No known Name/Text mapping for {typeof(T).Name}")
         };
         _translatedStrings[(typeof(T), rowId)] = value;

@@ -1,1 +1,1 @@
-- Bug fix maybe: increased default delay from .25 seconds back up to .75 seconds -alydev
+- Bug fix: Cleaner travel through the rooms of the Rising Stones, hopefully -alydev

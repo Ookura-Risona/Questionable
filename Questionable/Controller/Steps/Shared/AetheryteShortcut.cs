@@ -33,6 +33,7 @@ internal static class AetheryteShortcut
                 // Scion quest hubs
                 if (step.TerritoryId == 212) // Waking Sands
                 {
+                    step.TargetTerritoryId = 212;
                     bool inTerritory = clientState.TerritoryType == 212;
                     if (!inTerritory)
                     {
@@ -67,14 +68,14 @@ internal static class AetheryteShortcut
                 }
                 else if (step.TerritoryId == 351) // Rising Stones
                 {
+                    step.TargetTerritoryId = 351;
                     bool inTerritory = clientState.TerritoryType == 351;
                     if (!inTerritory)
                     {
                         yield return new Task(step, quest.Id, EAetheryteLocation.MorDhona, 156);
                         yield return new MoveTask(
                             TerritoryId: 156,
-                            Destination: new(21.133728f, 22.323914f, -631.281f),
-                            Mount: true);
+                            Destination: new(21.133728f, 22.323914f, -631.281f));
                         yield return new Interact.Task(2002881, quest, EInteractionType.Interact);
                     }
                     // if target is in Solar and we are not currently there, interact to get there
@@ -360,15 +361,15 @@ internal static class AetheryteShortcut
                                 return true;
                             }
 
-                            if (!Task.Step.InteractionType.Equals(EInteractionType.AttuneAetheryte) &&
-                                Task.Step.TerritoryId != clientState.TerritoryType)
+                            if (Task.Step.InteractionType.Equals(EInteractionType.AttuneAetheryte) ||
+                                !aetheryteFunctions.IsAetheryteUnlocked(Task.targetAetheryte))
                             {
-                                logger.LogInformation("No step position, teleporting to aetheryte");
-                                return false;
+                                logger.LogInformation("AttuneAetheryte, proceeding to destination");
+                                return true;
                             }
 
-                            logger.LogInformation("AttuneAetheryte, proceeding to destination");
-                            return true;
+                            logger.LogInformation("No step position, teleporting to aetheryte");
+                            return false;
                         }
 
                         float distance_target = (pos - Task.Step.Position.Value).Length();

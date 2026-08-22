@@ -311,6 +311,7 @@ internal sealed partial class ActiveQuestComponent
                                                 configuration.Stop.QuestsToStopWhenAccepted.Any(x =>
                                                     !questFunctions.IsQuestAcceptedOrComplete(x) &&
                                                     !questFunctions.IsQuestUnobtainable(x));
+                bool preventQuestCompletion = configuration.Advanced.PreventQuestCompletion;
 
                 List<PriorityQuestInfo> priorityQuests = questFunctions.NextPriorityQuestsThatCanBeAccepted;
                 bool anyAvailable = false;
@@ -322,7 +323,7 @@ internal sealed partial class ActiveQuestComponent
                     if (anyAvailable && anyUnavailable) break;
                 }
 
-                bool showStopClock = hasLevelCondition || hasCompleteQuestConditions || hasAcceptQuestConditions;
+                bool showStopClock = hasLevelCondition || hasCompleteQuestConditions || hasAcceptQuestConditions || preventQuestCompletion;
                 bool showPriorityCrystal = anyAvailable || anyUnavailable;
                 if (showStopClock || showPriorityCrystal)
                     ImGui.SameLine();
@@ -406,6 +407,14 @@ internal sealed partial class ActiveQuestComponent
                             }
 
                             ImGui.Unindent();
+                        }
+
+                        if (preventQuestCompletion)
+                        {
+                            if (hasLevelCondition || hasCompleteQuestConditions || hasAcceptQuestConditions)
+                                ImGui.Spacing();
+
+                            ImGui.BulletText(_L("Prevent quest completion"));
                         }
                     }
                 }
@@ -755,16 +764,16 @@ internal sealed partial class ActiveQuestComponent
     public void DrawTitleBarPill(string windowTitle)
     {
         if (combatController.IsRunning)
-            QstWidgets.TitleBarPill(_L("Combat"), QstTheme.Accent, windowTitle);
+            QstWidgets.TitleBarPill(_L("Combat"), QstTheme.Accent, windowTitle, alignCenter: configuration.General.TitleBarPillCenter);
         else if (questController.IsRunning
                  && (questController.StopAfterCurrentQuest
                      || questController.StopAfterAcceptingNextQuest
                      || questController.StopBeforeTeleport))
-            QstWidgets.TitleBarPill(_L("Stopping"), QstTheme.Amber, windowTitle);
+            QstWidgets.TitleBarPill(_L("Stopping"), QstTheme.Amber, windowTitle, alignCenter: configuration.General.TitleBarPillCenter);
         else if (questController.IsRunning)
-            QstWidgets.TitleBarPill(_L("Running"), QstTheme.Success, windowTitle);
+            QstWidgets.TitleBarPill(_L("Running"), QstTheme.Success, windowTitle, alignCenter: configuration.General.TitleBarPillCenter);
         else
-            QstWidgets.TitleBarPill(_L("Idle"), QstTheme.TextMuted, windowTitle);
+            QstWidgets.TitleBarPill(_L("Idle"), QstTheme.TextMuted, windowTitle, alignCenter: configuration.General.TitleBarPillCenter);
     }
 
     private static float CalculateQuestProgress(QuestController.QuestProgress progress)
