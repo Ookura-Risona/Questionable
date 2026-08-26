@@ -70,6 +70,7 @@ The policy is adapted from Homebrew's contributing guidelines. These articles al
 - 优先保留 `CN_MERGE_NOTES.md` 中列为“必须优先保留”的行为。
 - 如果上游代码结构变化，应按新版结构重新接入这些行为，而不是机械恢复旧代码。
 - 对硬编码中文 UI 文本，优先迁移到上游 i18n 资源；只有上游尚未支持时才临时保留硬编码。
+- 决不允许任何时间主动在json内的作者列表内增加本地用户Ookura-Risona（或其他任何代表本用户的名字），不允许改动汉化者decorwdyun的相关署名，上游作者变更时跟随改动
 
 ### 合并后
 
